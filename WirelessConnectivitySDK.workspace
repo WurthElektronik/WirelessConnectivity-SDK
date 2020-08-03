@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="WirelessConnectivitySDK">
+		<Project filename="Example_Titania/Example_Titania.cbp" />
+		<Project filename="Example_Thadeus/Example_Thadeus.cbp" />
+		<Project filename="Example_TarvosIII/Example_TarvosIII.cbp" />
+		<Project filename="Example_TarvosIIIPlug/Example_TarvosIIIPlug.cbp" />
+		<Project filename="Example_TarvosII/Example_TarvosII.cbp" />
+		<Project filename="Example_TarvosIIPlug/Example_TarvosIIPlug.cbp" />
+		<Project filename="Example_ThebeI/Example_ThebeI.cbp" />
+		<Project filename="Example_TarvosI/Example_TarvosI.cbp" />
+		<Project filename="Example_TarvosIPlug/Example_TarvosIPlug.cbp" />
+		<Project filename="Example_TelestoIII/Example_TelestoIII.cbp" />
+		<Project filename="Example_TelestoIIIPlug/Example_TelestoIIIPlug.cbp" />
+		<Project filename="Example_TelestoI/Example_TelestoI.cbp" />
+		<Project filename="Example_TelestoII/Example_TelestoII.cbp" />
+		<Project filename="Example_Triton/Example_Triton.cbp" />
+		<Project filename="Example_Thalassa/Example_Thalassa.cbp" />
+		<Project filename="Example_ThalassaPlug/Example_ThalassaPlug.cbp" />
+		<Project filename="Example_ProteusI/Example_ProteusI.cbp" />
+		<Project filename="Example_ProteusII/Example_ProteusII.cbp" />
+		<Project filename="Example_ProteusIIPlug/Example_ProteusIIPlug.cbp" />
+		<Project filename="Example_ProteusIII/Example_ProteusIII.cbp" />
+		<Project filename="Example_ProteusIIIPlug/Example_ProteusIIIPlug.cbp" />
+		<Project filename="Example_Metis_169MHz/Example_Metis_169MHz.cbp" />
+		<Project filename="Example_MetisPlug_169MHz/Example_MetisPlug_169MHz.cbp" />
+		<Project filename="Example_Metis_868MHz/Example_Metis_868MHz.cbp" />
+		<Project filename="Example_MetisPlug_868MHz/Example_MetisPlug_868MHz.cbp" />
+		<Project filename="Example_Calypso/Example_Calypso.cbp" />
+		<Project filename="Example_ThemistoI/Example_ThemistoI.cbp" />
+		<Project filename="Example_ThebeII/Example_ThebeII.cbp" />
+		<Project filename="Example_ThebeIIPlug/Example_ThebeIIPlug.cbp" />
+		<Project filename="Example_ThemistoIPlug/Example_ThemistoIPlug.cbp" />
+		<Project filename="Example_ThyoneI/Example_ThyoneI.cbp" />
+		<Project filename="Example_ThyoneIPlug/Example_ThyoneIPlug.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>

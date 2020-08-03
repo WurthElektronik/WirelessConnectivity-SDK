@@ -1,0 +1,54 @@
+# depslib dependency file v1.0
+1534896002 source:/home/pi/Projects/Driver/drivers/global/global.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<time.h>
+	"string.h"
+	<sched.h>
+	"../../drivers/WE-common.h"
+	"global.h"
+
+1565684206 /home/pi/Projects/Driver/drivers/WE-common.h
+	<pthread.h>
+
+1534896002 /home/pi/Projects/Driver/drivers/global/global.h
+	<stdbool.h>
+	<stdint.h>
+
+1534896002 source:/home/pi/Projects/Driver/drivers/global/global_serial.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<time.h>
+	<wiringPi.h>
+	<wiringSerial.h>
+	<errno.h>
+	"string.h"
+	<sched.h>
+	"../../drivers/WE-common.h"
+	"global.h"
+
+1565858674 source:/home/pi/Projects/Driver/drivers/ProteusII/ProteusII.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<errno.h>
+	"string.h"
+	"ProteusII.h"
+	"../../drivers/WE-common.h"
+	"../../drivers/global/global.h"
+
+1565857078 /home/pi/Projects/Driver/drivers/ProteusII/ProteusII.h
+	<stdbool.h>
+
+1565857611 source:/home/pi/Projects/Driver/Example_ProteusII/main.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<string.h>
+	<errno.h>
+	"../drivers/ProteusII/ProteusII.h"
+	"../drivers/global/global.h"
+	"../drivers/WE-common.h"
+
