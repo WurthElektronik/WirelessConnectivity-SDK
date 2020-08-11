@@ -63,6 +63,10 @@
 #define Metis_CMD_SET_REQ (Metis_CMD_SET | Metis_CMD_TYPE_REQ)
 #define Metis_CMD_SET_CNF (Metis_CMD_SET | Metis_CMD_TYPE_CNF)
 
+#define Metis_CMD_SETUARTSPEED 0X10
+#define Metis_CMD_SETUARTSPEED_REQ (Metis_CMD_SETUARTSPEED | Metis_CMD_TYPE_REQ)
+#define Metis_CMD_SETUARTSPEED_CNF (Metis_CMD_SETUARTSPEED | Metis_CMD_TYPE_CNF)
+
 #define Metis_CMD_GET 0x0A
 #define Metis_CMD_GET_REQ (Metis_CMD_GET | Metis_CMD_TYPE_REQ)
 #define Metis_CMD_GET_CNF (Metis_CMD_GET | Metis_CMD_TYPE_CNF)
@@ -78,10 +82,6 @@
 #define Metis_CMD_RSSI 0x0D
 #define Metis_CMD_RSSI_REQ (Metis_CMD_RSSI | Metis_CMD_TYPE_REQ)
 #define Metis_CMD_RSSI_CNF (Metis_CMD_RSSI | Metis_CMD_TYPE_CNF)
-
-#define Metis_CMD_SETUARTSPEED 0X0F
-#define Metis_CMD_SETUARTSPEED_REQ (Metis_CMD_SETUARTSPEED | Metis_CMD_TYPE_REQ)
-#define Metis_CMD_SETUARTSPEED_CNF (Metis_CMD_SETUARTSPEED | Metis_CMD_TYPE_CNF)
 
 #define Metis_CMD_FACTORYRESET 0X11
 #define Metis_CMD_FACTORYRESET_REQ (Metis_CMD_FACTORYRESET | Metis_CMD_TYPE_REQ)
