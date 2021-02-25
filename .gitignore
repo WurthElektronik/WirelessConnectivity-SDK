@@ -1,0 +1,8 @@
+Example_*/obj
+Example_*/bin
+Example_*/*.depend
+Example_*/*.layout
+drivers/*/obj
+drivers/*/bin
+
+**/*.swp

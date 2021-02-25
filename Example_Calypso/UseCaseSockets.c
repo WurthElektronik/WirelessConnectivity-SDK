@@ -35,7 +35,7 @@ void UseCaseSockets_UDPUnsecure()
     bool running = true;
     uint8_t socketid;
 
-    if(Calypso_Init(921600, Calypso_ParityBit_EVEN, eventCallbackSocket))
+    if(Calypso_Init(921600, Serial_ParityBit_EVEN, eventCallbackSocket))
     {
         while(running)
         {
@@ -157,7 +157,7 @@ void UseCaseSockets_TCP(bool isServer, bool isSecure)
     uint8_t socketIdOpen = 0;
     uint8_t socketIdConnection = 0;
 
-    if(Calypso_Init(921600, Calypso_ParityBit_EVEN, eventCallbackSocket))
+    if(Calypso_Init(921600, Serial_ParityBit_EVEN, eventCallbackSocket))
     {
         while(running)
         {

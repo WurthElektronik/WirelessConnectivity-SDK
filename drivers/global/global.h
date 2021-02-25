@@ -27,6 +27,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifndef GLOBAL_H_INCLUDED
+#define GLOBAL_H_INCLUDED
+
 typedef enum SetPin_InputOutput_t {
     SetPin_InputOutput_Input   = (uint8_t) 0,
     SetPin_InputOutput_Output  = (uint8_t) 1,
@@ -49,6 +52,14 @@ typedef enum Serial_ParityBit_t
     Serial_ParityBit_EVEN,
     Serial_ParityBit_ODD,
 }Serial_ParityBit_t;
+
+typedef enum Serial_Mode_t
+{
+    Serial_Mode_0,
+    Serial_Mode_1,
+    Serial_Mode_2,
+    Serial_Mode_3,
+}Serial_Mode_t;
 
 /*
  *Request the 3 byte driver version
@@ -73,6 +84,13 @@ extern bool GetDriverVersion(uint8_t* version);
  *        false, otherwise
 */
 extern bool SetPin( int pin_number, SetPin_InputOutput_t inout, SetPin_Pull_t pull, SetPin_Out_t out);
+/*Read out the pin level
+ *input:
+ *- pin_number: number of pin
+ *
+ * return: curren pin level of pin
+ */
+extern SetPin_Out_t GetPinLevel(int pin_number);
 
 /*
  * Print the string
@@ -81,6 +99,7 @@ extern bool SetPin( int pin_number, SetPin_InputOutput_t inout, SetPin_Pull_t pu
  * - str: String to print
  * - success: Variable indicating if action was ok
  */
+
 void Debug_out(char* str,bool success);
 
 /*
@@ -90,6 +109,15 @@ void Debug_out(char* str,bool success);
  * - sleepFor: Time to delay in ms
  */
 extern void delay(unsigned int sleepFor);
+
+
+/*
+ * Sleepfunction for delay
+ *
+ * input:
+ * - sleepFor: Time to delay in micro seconds
+ */
+extern void delay_us(unsigned int sleepFor);
 
 /*
  * Sets the priority for scheduling
@@ -159,6 +187,18 @@ extern bool DeinitSerial();
 extern bool OpenSerial(int baudrate);
 
 /*
+ * Open the SPI interface
+ *
+ * input:
+ * - baudrate: baudrate of the interface
+ * - mode    : mode of interface
+ * return: true, if success
+ *         false, otherwise
+ *
+ */
+extern bool OpenSPI(int datarate, Serial_Mode_t mode);
+
+/*
  * Open the serial interface
  *
  * input:
@@ -199,6 +239,20 @@ extern bool FlushSerial();
  */
 extern bool ReadByte(uint8_t *readBufferP);
 
+/*
+ * Read N bytes from serial interface
+ *
+ * input:
+ * - length     : length of the data to read
+ *
+ * output:
+ * - dataP: pointer to the buffer
+ * return: true, if success
+ *         false, otherwise
+ *
+ */
+extern bool ReadBytesN(uint8_t *dataP, uint16_t length);
+
 /**
  * Check if bytes are available in the serial interface
  *
@@ -206,6 +260,7 @@ extern bool ReadByte(uint8_t *readBufferP);
  *         false, otherwise
  *
  */
+
 extern bool BytesAvailable();
 
 /*
@@ -220,3 +275,4 @@ extern bool BytesAvailable();
  */
 extern bool SendBytes(uint8_t* dataP, uint16_t length);
 
+#endif /* GLOBAL_H_INCLUDED */

@@ -40,6 +40,8 @@
 #define _global_ftdi_defined
 #ifdef _global_serial_defined
 #error "second interface defined"
+#elifdef _global_serialWiringPi_defined
+#error "interface already defined"
 #endif
 
 /**************************************

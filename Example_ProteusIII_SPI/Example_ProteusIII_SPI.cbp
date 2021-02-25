@@ -2,26 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="Example_TelestoIII" />
+		<Option title="Example_ProteusIII_SPI" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
-			<Target title="Release">
-				<Option output="bin/Release/Example_TelestoIII" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-O2" />
-					<Add option="-Dlibgpiod_numbers" />
-				</Compiler>
-				<Linker>
-					<Add option="-s" />
-					<Add option="-lgpiod" />
-				</Linker>
-			</Target>
 			<Target title="Debug">
-				<Option output="bin/Debug/Example_TelestoIII" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/Example_ProteusIII_SPI" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -33,8 +19,36 @@
 					<Add option="-lgpiod" />
 				</Linker>
 			</Target>
-			<Target title="ReleaseWiringPi">
-				<Option output="bin/Release/Example_TelestoIII" prefix_auto="1" extension_auto="1" />
+			<Target title="Release">
+				<Option output="bin/Release/Example_ProteusIII_SPI" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-Dlibgpiod_numbers" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-lgpiod" />
+				</Linker>
+			</Target>
+			<Target title="Debug_wiringPi">
+				<Option output="bin/Debug/Example_ProteusIII_SPI" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DwiringPi_numbers" />
+				</Compiler>
+				<Linker>
+					<Add option="-lwiringPi" />
+					<Add library="/usr/lib/libwiringPi.so" />
+				</Linker>
+			</Target>
+			<Target title="Release_wiringPi">
+				<Option output="bin/Release/Example_ProteusIII_SPI" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -45,19 +59,7 @@
 				<Linker>
 					<Add option="-s" />
 					<Add option="-lwiringPi" />
-				</Linker>
-			</Target>
-			<Target title="DebugWiringPi">
-				<Option output="bin/Debug/Example_TelestoIII" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
-				<Option type="1" />
-				<Option compiler="gcc" />
-				<Compiler>
-					<Add option="-g" />
-					<Add option="-DwiringPi_numbers" />
-				</Compiler>
-				<Linker>
-					<Add option="-lwiringPi" />
+					<Add library="/usr/lib/libwiringPi.so" />
 				</Linker>
 			</Target>
 		</Build>
@@ -67,10 +69,10 @@
 		<Linker>
 			<Add option="-pthread" />
 		</Linker>
-		<Unit filename="../drivers/TelestoIII/TelestoIII.c">
+		<Unit filename="../drivers/ProteusIII_SPI/ProteusIII_SPI.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../drivers/TelestoIII/TelestoIII.h" />
+		<Unit filename="../drivers/ProteusIII_SPI/ProteusIII_SPI.h" />
 		<Unit filename="../drivers/global/global.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -82,18 +84,11 @@
 		</Unit>
 		<Unit filename="../drivers/global/global_pinWiringPi.c">
 			<Option compilerVar="CC" />
-			<Option target="ReleaseWiringPi" />
-			<Option target="DebugWiringPi" />
+			<Option target="Debug_wiringPi" />
+			<Option target="Release_wiringPi" />
 		</Unit>
-		<Unit filename="../drivers/global/global_serial.c">
+		<Unit filename="../drivers/global/global_spi.c">
 			<Option compilerVar="CC" />
-			<Option target="Debug" />
-			<Option target="Release" />
-		</Unit>
-		<Unit filename="../drivers/global/global_serialWiringPi.c">
-			<Option compilerVar="CC" />
-			<Option target="ReleaseWiringPi" />
-			<Option target="DebugWiringPi" />
 		</Unit>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />

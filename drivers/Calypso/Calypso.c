@@ -139,7 +139,7 @@ void *rx_thread();
 
  * return true if succesful, false otherwise
  */
-bool Calypso_Init(int baudrate, Calypso_ParityBit_t parityBit, void(*evtCb)(char *))
+bool Calypso_Init(int baudrate, Serial_ParityBit_t parityBit, void(*evtCb)(char *))
 {
     ResetUartRxThread = false;
     AbortUartRxThread = false;

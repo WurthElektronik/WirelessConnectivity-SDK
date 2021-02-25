@@ -34,7 +34,14 @@ extern "C" {
 #define _Thadeus_defined
 
 /* Pins */
-#define Thadeus_PIN_RESET  7  // LED Pin - wiringPi (pin 7 - BCM_GPIO 4).
+/* Pins */
+#ifdef libgpiod_numbers
+#define Thadeus_PIN_RESET  4 // BCM_GPIO 4
+#elif defined wiringPi_numbers
+#define Thadeus_PIN_RESET  7  // wiringPi (pin 7 - BCM_GPIO 4).
+#else
+#error
+#endif
 
 #define Thadeus_BROADCASTADDRESS 0xFF
 #define MAX_USERSETTING_LENGTH 4

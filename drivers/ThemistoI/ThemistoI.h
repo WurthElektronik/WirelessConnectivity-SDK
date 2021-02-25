@@ -34,12 +34,21 @@ extern "C" {
 #define _ThemistoI_defined
 
 /* Pins */
-#define ThemistoI_PIN_RESET  7  // LED Pin - wiringPi (pin 7 - BCM_GPIO 4).
-#define ThemistoI_PIN_WAKEUP 0  // LED Pin - wiringPi (pin 0 - BCM_GPIO 17)
-#define ThemistoI_PIN_PWM    1  // LED Pin - wiringPi (pin 1 - BCM_GPIO 18)
-#define ThemistoI_PIN_BOOT   2  // LED Pin - wiringPi (pin 2 - BCM_GPIO Rv1)
-#define ThemistoI_PIN_RTS    4  // LED Pin - wiringPi (pin 4 - BCM_GPIO 23)
-#define ThemistoI_PIN_CTS    5  // LED Pin - wiringPi (pin 5 - BCM_GPIO 24)
+#ifdef libgpiod_numbers
+#define ThemistoI_PIN_RESET  4   // BCM_GPIO 4
+#define ThemistoI_PIN_WAKEUP 17  // BCM_GPIO 17
+#define ThemistoI_PIN_BOOT   27  // BCM_GPIO 27
+#define ThemistoI_PIN_RTS    23  // BCM_GPIO 23
+#define ThemistoI_PIN_CTS    24  // BCM_GPIO 24
+#elif defined wiringPi_numbers
+#define ThemistoI_PIN_RESET  7  // wiringPi (pin 7 - BCM_GPIO 4
+#define ThemistoI_PIN_WAKEUP 0  // wiringPi (pin 0 - BCM_GPIO 17
+#define ThemistoI_PIN_BOOT   2  // wiringPi (pin 2 - BCM_GPIO 27
+#define ThemistoI_PIN_RTS    4  // wiringPi (pin 4 - BCM_GPIO 23
+#define ThemistoI_PIN_CTS    5  // wiringPi (pin 5 - BCM_GPIO 24
+#else
+#warning "No pins defined. Can be ignored for plug projects"
+#endif
 
 #define ThemistoI_BROADCASTADDRESS 0xFF
 #define MAX_USERSETTING_LENGTH 4

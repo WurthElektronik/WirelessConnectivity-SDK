@@ -711,7 +711,7 @@ static int8_t CalculateRSSIValue(uint8_t rxLevel)
  */
 bool Metis_Init( int baudrate, int rp, Metis_Frequency_t frequency, Metis_Mode_Preselect_t mode, bool enable_rssi, void(*RXcb)(uint8_t*,uint8_t,int8_t))
 {
-    if (false == InitSerial(rp))
+    if (false == InitSerial())
     {
         /* error */
         return false ;

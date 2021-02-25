@@ -34,7 +34,13 @@ extern "C" {
 #define _TelestoI_defined
 
 /* Pins */
-#define TelestoI_PIN_RESET  7  // LED Pin - wiringPi (pin 7 - BCM_GPIO 4).
+#ifdef libgpiod_numbers
+#define TelestoI_PIN_RESET  4 // BCM_GPIO 4
+#elif defined wiringPi_numbers
+#define TelestoI_PIN_RESET  7  // wiringPi (pin 7 - BCM_GPIO 4).
+#else
+#warning "No pins defined. Can be ignored for plug projects"
+#endif
 
 #define TelestoI_BROADCASTADDRESS 0xFF
 #define MAX_USERSETTING_LENGTH 4

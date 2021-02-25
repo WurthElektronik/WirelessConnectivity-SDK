@@ -28,7 +28,7 @@
 /******************
  * driver version *
  ******************/
-#define WIRELESS_CONNECTIVITY_SDK_VERSION {3,2,0}
+#define WIRELESS_CONNECTIVITY_SDK_VERSION {3,3,0}
 
 /* thread priorities */
 #define PRIO_MAIN_THREAD                   9

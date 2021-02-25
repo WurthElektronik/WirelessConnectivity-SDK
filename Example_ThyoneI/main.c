@@ -51,7 +51,7 @@ void *main_Thread(void *pArgs)
     /* apply a higher priority to this thread to be prioritized w.r.t. the main function  */
     setThreadPrio(PRIO_MAIN_THREAD);
 
-#if 0
+#if 1
     /* function to test all functions of the ThyoneI driver */
     ThyoneI_test_function();
 #else
@@ -192,7 +192,7 @@ static void ThyoneI_test_function()
 
 #endif
 
-#if 0
+#if 1
         /* Group ID */
         uint8_t groupIDSet = 0x16;
         uint8_t groupIDGet = 0;
@@ -278,7 +278,7 @@ static void ThyoneI_test_function()
 
 #endif
 
-#if 0
+#if 1
 
         uint8_t payload[11] = { 'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'};
 
@@ -324,7 +324,7 @@ static void ThyoneI_test_function()
 
 #endif
 
-#if 1
+#if 0
         /* Config Local */
         ThyoneI_GPIOConfigBlock_t configLocalGPIO[ThyoneI_AMOUNT_GPIO_PINS];
 

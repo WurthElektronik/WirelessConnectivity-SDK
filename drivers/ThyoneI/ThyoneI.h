@@ -34,9 +34,17 @@ extern "C" {
 #define _ThyoneI_defined
 
 /* Pins */
-#define ThyoneI_PIN_RESET  7  // LED Pin - wiringPi (pin 7 - BCM_GPIO 4).
-#define ThyoneI_PIN_WAKEUP 0  // LED Pin - wiringPi (pin 0 - BCM_GPIO 17)
-#define ThyoneI_PIN_BOOT   2  // LED Pin - wiringPi (pin 2 - BCM_GPIO Rv1)
+#ifdef libgpiod_numbers
+#define ThyoneI_PIN_RESET  4   // BCM_GPIO 4
+#define ThyoneI_PIN_WAKEUP 17  // BCM_GPIO 17
+#define ThyoneI_PIN_BOOT   27  // BCM_GPIO 27
+#elif defined wiringPi_numbers
+#define ThyoneI_PIN_RESET  7  // wiringPi (pin 7 - BCM_GPIO 4
+#define ThyoneI_PIN_WAKEUP 0  // wiringPi (pin 0 - BCM_GPIO 17
+#define ThyoneI_PIN_BOOT   2  // wiringPi (pin 2 - BCM_GPIO 27
+#else
+#warning "No pins defined. Can be ignored for plug projects"
+#endif
 
 /* timings */
 #define ThyoneI_BOOT_DURATION (uint16_t)75

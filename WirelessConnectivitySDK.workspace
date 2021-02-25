@@ -22,6 +22,7 @@
 		<Project filename="Example_ProteusIIPlug/Example_ProteusIIPlug.cbp" />
 		<Project filename="Example_ProteusIII/Example_ProteusIII.cbp" />
 		<Project filename="Example_ProteusIIIPlug/Example_ProteusIIIPlug.cbp" />
+		<Project filename="Example_ProteusIII_SPI/Example_ProteusIII_SPI.cbp" />
 		<Project filename="Example_Metis_169MHz/Example_Metis_169MHz.cbp" />
 		<Project filename="Example_MetisPlug_169MHz/Example_MetisPlug_169MHz.cbp" />
 		<Project filename="Example_Metis_868MHz/Example_Metis_868MHz.cbp" />

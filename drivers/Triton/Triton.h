@@ -34,8 +34,15 @@ extern "C" {
 #define _Triton_defined
 
 /* Pins */
-#define Triton_PIN_RESET  7  // LED Pin - wiringPi (pin 7 - BCM_GPIO 4).
-#define Triton_PIN_WAKEUP 0  // LED Pin - wiringPi (pin 0 - BCM_GPIO 17)
+#ifdef libgpiod_numbers
+#define Triton_PIN_RESET  4   // BCM_GPIO 4
+#define Triton_PIN_WAKEUP 17  // BCM_GPIO 17
+#elif defined wiringPi_numbers
+#define Triton_PIN_RESET  7  // wiringPi (pin 7 - BCM_GPIO 4).
+#define Triton_PIN_WAKEUP 0  // wiringPi (pin 0 - BCM_GPIO 17
+#else
+#warning "No pins defined. Can be ignored for plug projects"
+#endif
 
 #define Triton_BROADCASTADDRESS 0xFF
 #define MAX_USERSETTING_LENGTH 4

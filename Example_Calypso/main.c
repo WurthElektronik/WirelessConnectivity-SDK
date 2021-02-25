@@ -67,7 +67,7 @@ static void Calypso_test_function()
 static void Calypso_test_ATDevice_function()
 {
 
-    if(Calypso_Init(921600, Calypso_ParityBit_EVEN, NULL))
+    if(Calypso_Init(921600, Serial_ParityBit_EVEN, NULL))
     {
         bool ret = false;
         ret = ATDevice_reboot();
@@ -135,7 +135,7 @@ static void Calypso_test_ATDevice_function()
 static void Calypso_test_ATWLAN_function(void)
 {
 
-    if(Calypso_Init(921600, Calypso_ParityBit_EVEN, NULL))
+    if(Calypso_Init(921600, Serial_ParityBit_EVEN, NULL))
     {
         bool ret = false;
 
@@ -278,7 +278,7 @@ static void Calypso_test_ATWLAN_function(void)
 static void Calypso_test_ATFile_function(void)
 {
     bool ret = false;
-    if(Calypso_Init(921600, Calypso_ParityBit_EVEN, NULL))
+    if(Calypso_Init(921600, Serial_ParityBit_EVEN, NULL))
     {
         uint32_t fileID;
         uint32_t secureToken;
@@ -321,7 +321,7 @@ static void Calypso_test_ATMQTT_function(void)
     bool ret = false;
 
     const char *serverAddress = "mqtt.address";
-    if(Calypso_Init(921600, Calypso_ParityBit_EVEN, NULL))
+    if(Calypso_Init(921600, Serial_ParityBit_EVEN, NULL))
     {
 
         ATMQTT_ServerInfo_t serverInfo;

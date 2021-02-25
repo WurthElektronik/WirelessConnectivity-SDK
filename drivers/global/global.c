@@ -18,7 +18,7 @@
  * FOR MORE INFORMATION PLEASE CAREFULLY READ THE LICENSE AGREEMENT FILE LOCATED
  * IN THE ROOT DIRECTORY OF THIS DRIVER PACKAGE.
  *
- * COPYRIGHT (c) 2020 Würth Elektronik eiSos GmbH & Co. KG
+ * COPYRIGHT (c) 2021 Würth Elektronik eiSos GmbH & Co. KG
  *
  ***************************************************************************************************
  **/
@@ -90,6 +90,16 @@ void delay(unsigned int sleepFor)
 
     sleeper.tv_sec  = (time_t)(sleepFor / 1000) ;
     sleeper.tv_nsec = (long)(sleepFor % 1000) * 1000000 ;
+
+    nanosleep(&sleeper, &dummy) ;
+}
+
+void delay_us(unsigned int sleepFor)
+{
+    struct timespec sleeper, dummy ;
+
+    sleeper.tv_sec  = (time_t)(sleepFor / 1000000) ;
+    sleeper.tv_nsec = (long)(sleepFor % 1000) * 1000 ;
 
     nanosleep(&sleeper, &dummy) ;
 }

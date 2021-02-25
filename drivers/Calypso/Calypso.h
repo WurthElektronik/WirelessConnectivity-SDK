@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../global/global.h"
+
 /*
 * Includes.
 * ######################################################################### */
@@ -76,13 +78,6 @@ typedef enum Calypso_CNFStatus_t
     Calypso_CNFStatus_Invalid,
 } Calypso_CNFStatus_t;
 
-typedef enum Calypso_ParityBit_t
-{
-    Calypso_ParityBit_NONE = 0,
-    Calypso_ParityBit_EVEN, /* calypso default: 921600 Baud 8e1 */
-    Calypso_ParityBit_ODD,
-}Calypso_ParityBit_t;
-
 typedef enum Calypso_DataFormat_t
 {
     Calypso_DataFormat_Binary,
@@ -114,7 +109,7 @@ typedef enum Calypso_DataFormat_t
 * Exported Functions:
 */
 
-extern bool Calypso_Init(int baudrate, Calypso_ParityBit_t parityBit, void(*evtCb)(char *));
+extern bool Calypso_Init(int baudrate, Serial_ParityBit_t parityBit, void(*evtCb)(char *));
 extern bool Calypso_Deinit();
 
 extern bool Calypso_startRxThread();

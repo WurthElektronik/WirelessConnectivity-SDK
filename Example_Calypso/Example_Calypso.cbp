@@ -30,7 +30,6 @@
 			<Add option="-pthread" />
 			<Add library="/usr/local/lib/libftd2xx.so" />
 		</Linker>
-		<Unit filename="../drivers/Amber-common.h" />
 		<Unit filename="../drivers/Calypso/ATCommands/ATDevice.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -61,6 +60,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../drivers/Calypso/Calypso.h" />
+		<Unit filename="../drivers/WE-common.h" />
 		<Unit filename="../drivers/global/global.c">
 			<Option compilerVar="CC" />
 		</Unit>
