@@ -75,10 +75,10 @@ extern bool ThyoneIPlug_TransmitUnicast(uint8_t* payloadP, uint16_t length);
 extern bool ThyoneIPlug_TransmitMulticastExtended(uint8_t groupID, uint8_t* payloadP, uint16_t length);
 extern bool ThyoneIPlug_TransmitUnicastExtended(uint32_t address, uint8_t* payloadP, uint16_t length);
 
-extern bool ThyoneIPlug_GPIORemoteSetConfig(uint32_t destAddress, ThyoneIPlug_GPIOConfigBlock_t* configP, uint16_t configLength);
-extern bool ThyoneIPlug_GPIORemoteGetConfig(uint32_t destAddress, ThyoneIPlug_GPIOConfigBlock_t* configP, uint16_t* configLength);
-extern bool ThyoneIPlug_GPIORemoteWrite(uint32_t destAddress, ThyoneIPlug_GPIOControlBlock_t* controlP, uint16_t controlLength);
-extern bool ThyoneIPlug_GPIORemoteRead(uint32_t destAddress, uint8_t *GPIOToRead, uint8_t amountGPIOToRead, ThyoneIPlug_GPIOControlBlock_t* controlP, uint16_t* controlLength);
+extern bool ThyoneIPlug_GPIORemoteSetConfig(uint32_t destAddress, ThyoneIPlug_GPIOConfigBlock_t* configP, uint16_t number_of_configs);
+extern bool ThyoneIPlug_GPIORemoteGetConfig(uint32_t destAddress, ThyoneIPlug_GPIOConfigBlock_t* configP, uint16_t* number_of_configsP);
+extern bool ThyoneIPlug_GPIORemoteWrite(uint32_t destAddress, ThyoneIPlug_GPIOControlBlock_t* controlP, uint16_t number_of_controls);
+extern bool ThyoneIPlug_GPIORemoteRead(uint32_t destAddress, uint8_t *GPIOToRead, uint8_t amountGPIOToRead, ThyoneIPlug_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP);
 
 /* functions that write the non-volatile settings in the flash,
  * after modification of any non-volatile setting, the module must be reset such that the update takes effect

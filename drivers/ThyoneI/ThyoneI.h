@@ -62,8 +62,10 @@ typedef enum ThyoneI_GPIO_t
 
 typedef enum ThyoneI_GPIO_IO_t
 {
-    ThyoneI_GPIO_IO_Input  = (uint8_t)0x01,
-    ThyoneI_GPIO_IO_Output = (uint8_t)0x02
+    ThyoneI_GPIO_IO_Disconnected  = (uint8_t)0x00,
+    ThyoneI_GPIO_IO_Input         = (uint8_t)0x01,
+    ThyoneI_GPIO_IO_Output        = (uint8_t)0x02,
+    ThyoneI_GPIO_IO_PWM           = (uint8_t)0x03
 } ThyoneI_GPIO_IO_t;
 
 typedef enum ThyoneI_GPIO_Output_t
@@ -79,17 +81,29 @@ typedef enum ThyoneI_GPIO_Input_t
     ThyoneI_GPIO_Input_PullUp   = (uint8_t)0x02
 } ThyoneI_GPIO_Input_t;
 
+typedef struct ThyoneI_GPIO_PwmValue_t{
+    uint16_t period; /* in ms */
+    uint8_t ratio;  /* 0-255 (0%-100%)*/
+} ThyoneI_GPIO_PwmValue_t;
+
 typedef struct ThyoneI_GPIOConfigBlock_t{
-    uint8_t length;
-    uint8_t GPIO_ID;
-    uint8_t InputOutput;
-    uint8_t value;
+    ThyoneI_GPIO_t    GPIO_ID;
+    ThyoneI_GPIO_IO_t function;
+	union /* 3Byte */
+    {
+        ThyoneI_GPIO_PwmValue_t pwm;
+        ThyoneI_GPIO_Input_t input;
+        ThyoneI_GPIO_Output_t output;
+    } value;
 } ThyoneI_GPIOConfigBlock_t;
 
 typedef struct ThyoneI_GPIOControlBlock_t{
-    uint8_t length;
-    uint8_t GPIO_ID;
-    uint8_t value;
+    ThyoneI_GPIO_t GPIO_ID;
+    union /* 1Byte */
+    {
+        ThyoneI_GPIO_Output_t output;
+		uint8_t ratio;  /* 0-255 (0%-100%)*/
+    } value;
 } ThyoneI_GPIOControlBlock_t;
 
 typedef enum ThyoneI_ResetReason_t {
@@ -214,15 +228,15 @@ extern bool ThyoneI_TransmitMulticastExtended(uint8_t groupID, uint8_t* payloadP
 extern bool ThyoneI_TransmitUnicastExtended(uint32_t address, uint8_t* payloadP, uint16_t length);
 
 /* functions to control the GPIO feature */
-extern bool ThyoneI_GPIOLocalSetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t configLength);
-extern bool ThyoneI_GPIOLocalGetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t* configLengthP);
-extern bool ThyoneI_GPIOLocalWrite(ThyoneI_GPIOControlBlock_t* controlP, uint16_t controlLength);
-extern bool ThyoneI_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* controlLengthP);
+extern bool ThyoneI_GPIOLocalSetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t number_of_configs);
+extern bool ThyoneI_GPIOLocalGetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t* number_of_configsP);
+extern bool ThyoneI_GPIOLocalWrite(ThyoneI_GPIOControlBlock_t* controlP, uint16_t number_of_controls);
+extern bool ThyoneI_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP);
 
-extern bool ThyoneI_GPIORemoteSetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t configLength);
-extern bool ThyoneI_GPIORemoteGetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t* configLengthP);
-extern bool ThyoneI_GPIORemoteWrite(uint32_t destAddress, ThyoneI_GPIOControlBlock_t* controlP, uint16_t controlLength);
-extern bool ThyoneI_GPIORemoteRead(uint32_t destAddress, uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* controlLengthP);
+extern bool ThyoneI_GPIORemoteSetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t number_of_configs);
+extern bool ThyoneI_GPIORemoteGetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t* number_of_configsP);
+extern bool ThyoneI_GPIORemoteWrite(uint32_t destAddress, ThyoneI_GPIOControlBlock_t* controlP, uint16_t number_of_controls);
+extern bool ThyoneI_GPIORemoteRead(uint32_t destAddress, uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP);
 
 /* functions that write the non-volatile settings in the flash,
  * after modification of any non-volatile setting, the module must be reset such that the update takes effect

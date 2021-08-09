@@ -359,161 +359,66 @@ static void HandleRxPacket(uint8_t * pRxBuffer)
 
     switch (RxPacket[CMD_POSITION_CMD])
     {
-    case ThyoneI_CMD_RESET_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = CMD_Status_NoStatus;
-        break;
-    }
-
-    case ThyoneI_CMD_DATA_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_GET_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_SET_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_GETSTATE_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = CMD_Status_NoStatus;
-        break;
-    }
-
-    case ThyoneI_CMD_FACTORYRESET_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_SLEEP_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_GPIO_LOCAL_SETCONFIG_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_GPIO_LOCAL_GETCONFIG_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_GPIO_LOCAL_WRITE_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_GPIO_LOCAL_READ_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_GPIO_REMOTE_SETCONFIG_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_GPIO_REMOTE_GETCONFIG_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-
-        break;
-    }
-
-    case ThyoneI_CMD_GPIO_REMOTE_WRITE_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ThyoneI_CMD_GPIO_REMOTE_READ_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = CMD_Status_Invalid;
-
-        break;
-    }
-
-    case ThyoneI_CMD_START_IND:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = CMD_Status_NoStatus;
-        break;
-    }
-
-    case ThyoneI_CMD_DATA_IND:
-    {
-        if(RXcallback != NULL)
+        case ThyoneI_CMD_RESET_CNF:
+        case ThyoneI_CMD_GETSTATE_CNF:
+        case ThyoneI_CMD_START_IND:
+        case ThyoneI_CMD_GPIO_REMOTE_GETCONFIG_RSP:
+        case ThyoneI_CMD_GPIO_REMOTE_READ_RSP:
         {
-            uint16_t payload_length = ((((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) | ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8))) - 5;
-
-            uint32_t sourceAddress = (uint32_t)RxPacket[CMD_POSITION_DATA];
-            sourceAddress = (sourceAddress << 8) + (uint32_t)RxPacket[CMD_POSITION_DATA+1];
-            sourceAddress = (sourceAddress << 8) + (uint32_t)RxPacket[CMD_POSITION_DATA+2];
-            sourceAddress = (sourceAddress << 8) + (uint32_t)RxPacket[CMD_POSITION_DATA+3];
-
-            RXcallback(&RxPacket[CMD_POSITION_DATA + 5], payload_length, sourceAddress, RxPacket[CMD_POSITION_DATA + 4]);
+            cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
+            cmdConfirmation.status = CMD_Status_NoStatus;
+            break;
         }
-        break;
-    }
 
-    case ThyoneI_CMD_TXCOMPLETE_RSP:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
+        case ThyoneI_CMD_DATA_CNF:
+        case ThyoneI_CMD_GET_CNF:
+        case ThyoneI_CMD_SET_CNF:
+        case ThyoneI_CMD_FACTORYRESET_CNF:
+        case ThyoneI_CMD_SLEEP_CNF:
+        case ThyoneI_CMD_GPIO_LOCAL_SETCONFIG_CNF:
+        case ThyoneI_CMD_GPIO_LOCAL_GETCONFIG_CNF:
+        case ThyoneI_CMD_GPIO_LOCAL_WRITE_CNF:
+        case ThyoneI_CMD_GPIO_LOCAL_READ_CNF:
+        case ThyoneI_CMD_GPIO_REMOTE_SETCONFIG_CNF:
+        case ThyoneI_CMD_GPIO_REMOTE_GETCONFIG_CNF:
+        case ThyoneI_CMD_GPIO_REMOTE_WRITE_CNF:
+        case ThyoneI_CMD_TXCOMPLETE_RSP:
+        {
+            cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
+            cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
+            break;
+        }
 
-    case ThyoneI_CMD_GPIO_REMOTE_GETCONFIG_RSP:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = CMD_Status_NoStatus;
-        break;
-    }
+        case ThyoneI_CMD_GPIO_REMOTE_READ_CNF:
+        {
+            cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
+            cmdConfirmation.status = CMD_Status_Invalid;
 
-    case ThyoneI_CMD_GPIO_REMOTE_READ_RSP:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = CMD_Status_NoStatus;
-        break;
-    }
-    default:
-    {
-        /* invalid*/
-        break;
-    }
+            break;
+        }
+
+
+        case ThyoneI_CMD_DATA_IND:
+        {
+            if(RXcallback != NULL)
+            {
+                uint16_t payload_length = ((((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) | ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8))) - 5;
+
+                uint32_t sourceAddress = (uint32_t)RxPacket[CMD_POSITION_DATA];
+                sourceAddress = (sourceAddress << 8) + (uint32_t)RxPacket[CMD_POSITION_DATA+1];
+                sourceAddress = (sourceAddress << 8) + (uint32_t)RxPacket[CMD_POSITION_DATA+2];
+                sourceAddress = (sourceAddress << 8) + (uint32_t)RxPacket[CMD_POSITION_DATA+3];
+
+                RXcallback(&RxPacket[CMD_POSITION_DATA + 5], payload_length, sourceAddress, RxPacket[CMD_POSITION_DATA + 4]);
+            }
+            break;
+        }
+
+        default:
+        {
+            /* invalid*/
+            break;
+        }
     }
 
     int i = 0;
@@ -1663,20 +1568,68 @@ ThyoneI_GetState(ThyoneI_States_t* state)
  *
  *input:
  * -configP: pointer to one or more pin configurations
- * -configLength: length of data configP points to
+ * -number_of_configs: number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneI_GPIOLocalSetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t configLength)
+bool ThyoneI_GPIOLocalSetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t number_of_configs)
 {
     bool ret = false;
+	uint16_t length = 0;
+
+	for (uint16_t i=0; i < number_of_configs; i++)
+	{
+		switch(configP->function)
+		{
+			case ThyoneI_GPIO_IO_Disconnected:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = 0x00;
+				length += 4;
+			}
+			break;
+			case ThyoneI_GPIO_IO_Input:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = configP->value.input;
+				length += 4;
+			}
+			break;
+			case ThyoneI_GPIO_IO_Output:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = configP->value.output;
+				length += 4;
+				}
+			break;
+			case ThyoneI_GPIO_IO_PWM:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 5;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				memcpy(&CMD_Array[CMD_POSITION_DATA + length + 3], &configP->value.pwm.period, 2);
+				CMD_Array[CMD_POSITION_DATA + length + 5] = configP->value.pwm.ratio;
+				length += 6;
+			}
+			break;
+			default:
+			{
+			}
+			break;
+		}
+		configP++;
+	}
 
     CMD_Array[CMD_POSITION_STX] = CMD_STX;
     CMD_Array[CMD_POSITION_CMD] = ThyoneI_CMD_GPIO_LOCAL_SETCONFIG_REQ;
-    CMD_Array[CMD_POSITION_LENGTH_LSB]= (configLength & 0x00FF);
-    CMD_Array[CMD_POSITION_LENGTH_MSB]= (configLength & 0xFF00) >> 8;
-
-    memcpy(&CMD_Array[CMD_POSITION_DATA], configP, configLength);
+    CMD_Array[CMD_POSITION_LENGTH_LSB]= (length & 0x00FF);
+    CMD_Array[CMD_POSITION_LENGTH_MSB]= (length & 0xFF00) >> 8;
 
     if (FillChecksum(CMD_Array, CMD_ARRAY_SIZE()))
     {
@@ -1695,11 +1648,11 @@ bool ThyoneI_GPIOLocalSetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t con
  *
  *output:
  * -configP: pointer to one or more pin configurations
- * -configLengthP: length of data configP points to
+ * -number_of_configsP: pointer to number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneI_GPIOLocalGetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t *configLengthP)
+bool ThyoneI_GPIOLocalGetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t *number_of_configsP)
 {
     bool ret = false;
 
@@ -1715,9 +1668,79 @@ bool ThyoneI_GPIOLocalGetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t *co
 
         /* wait for cnf */
         ret = Wait4CNF(CMD_WAIT_TIME, ThyoneI_CMD_GPIO_LOCAL_GETCONFIG_CNF, CMD_Status_Success, true);
-        /* config length is packetlength - 1 (status byte)*/
-        *configLengthP = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8) - 1;
-        memcpy(configP, &RxPacket[CMD_POSITION_DATA+1], *configLengthP);
+
+		if(ret == true)
+		{
+			uint16_t length = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8);
+
+			*number_of_configsP = 0;
+			uint8_t* uartP = &RxPacket[CMD_POSITION_DATA+1];
+			ThyoneI_GPIOConfigBlock_t* configP_running = configP;
+			while(uartP < &RxPacket[CMD_POSITION_DATA+length])
+			{
+				switch(*(uartP + 2))
+				{
+					case ThyoneI_GPIO_IO_Disconnected:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ThyoneI_GPIO_IO_Input:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							configP_running->value.input = *(uartP + 3);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ThyoneI_GPIO_IO_Output:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							configP_running->value.output = *(uartP + 3);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ThyoneI_GPIO_IO_PWM:
+					{
+						if(*uartP == 5)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							memcpy(&configP_running->value.pwm.period, (uartP + 3), 2);
+							configP_running->value.pwm.ratio = *(uartP + 5);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					default:
+					{
+
+					}
+					break;
+				}
+				uartP += *uartP + 1;
+			}
+		}
     }
 
     return ret;
@@ -1729,19 +1752,28 @@ bool ThyoneI_GPIOLocalGetConfig(ThyoneI_GPIOConfigBlock_t* configP, uint16_t *co
  *
  *input:
  * -controlP: pointer to one or more pin controls
- * -configLength: length of data configP controlP to
+ * -number_of_controls: number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneI_GPIOLocalWrite(ThyoneI_GPIOControlBlock_t* controlP, uint16_t controlLength)
+bool ThyoneI_GPIOLocalWrite(ThyoneI_GPIOControlBlock_t* controlP, uint16_t number_of_controls)
 {
     bool ret = false;
+	uint16_t length = 0;
+
+	for (uint16_t i=0; i < number_of_controls; i++)
+	{
+		CMD_Array[CMD_POSITION_DATA + length] = 2;
+		CMD_Array[CMD_POSITION_DATA + length + 1] = controlP->GPIO_ID;
+		CMD_Array[CMD_POSITION_DATA + length + 2] = controlP->value.output;
+		length += 3;
+		controlP++;
+	}
 
     CMD_Array[CMD_POSITION_STX] = CMD_STX;
     CMD_Array[CMD_POSITION_CMD] = ThyoneI_CMD_GPIO_LOCAL_WRITE_REQ;
-    CMD_Array[CMD_POSITION_LENGTH_LSB]= (controlLength & 0x00FF);
-    CMD_Array[CMD_POSITION_LENGTH_MSB]= (controlLength & 0xFF00) >> 8;
-    memcpy(&CMD_Array[CMD_POSITION_DATA], controlP, controlLength);
+    CMD_Array[CMD_POSITION_LENGTH_LSB]= (length & 0x00FF);
+    CMD_Array[CMD_POSITION_LENGTH_MSB]= (length & 0xFF00) >> 8;
 
     if (FillChecksum(CMD_Array, CMD_ARRAY_SIZE()))
     {
@@ -1764,11 +1796,11 @@ bool ThyoneI_GPIOLocalWrite(ThyoneI_GPIOControlBlock_t* controlP, uint16_t contr
  * -amountGPIOToRead: amount of pins to read and therefore length of GPIOToRead
  *output:
  * -controlP: Pointer to controlBlock
- * -controlLengthP: length of controlP
+ * -number_of_controlsP: pointer to number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneI_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* controlLengthP)
+bool ThyoneI_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP)
 {
     bool ret = false;
 
@@ -1786,9 +1818,28 @@ bool ThyoneI_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, Thyon
 
         /* wait for cnf */
         ret = Wait4CNF(CMD_WAIT_TIME, ThyoneI_CMD_GPIO_LOCAL_READ_CNF, CMD_Status_Success, true);
-        /* config length is packetlength - 1 (status byte)*/
-        *controlLengthP = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8) - 1;
-        memcpy(controlP, &RxPacket[CMD_POSITION_DATA+1], *controlLengthP);
+
+        if(ret)
+        {
+			uint16_t length = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8);
+
+			*number_of_controlsP = 0;
+			uint8_t* uartP = &RxPacket[CMD_POSITION_DATA+1];
+			ThyoneI_GPIOControlBlock_t* controlP_running = controlP;
+			while(uartP < &RxPacket[CMD_POSITION_DATA+length])
+			{
+
+				if(*uartP == 2)
+				{
+					controlP_running->GPIO_ID = *(uartP + 1);
+					controlP_running->value.output   = *(uartP + 2);
+
+					controlP_running++;
+					*number_of_controlsP += 1;
+				}
+				uartP += *uartP + 1;
+			}
+        }
     }
 
     return ret;
@@ -1800,24 +1851,70 @@ bool ThyoneI_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, Thyon
  *input:
  * -destAddress: Destination address of the remote Thyone-I device
  * -configP: pointer to one or more pin configurations
- * -configLength: length of data configP points to
+ * -number_of_configs: number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneI_GPIORemoteSetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t configLength)
+bool ThyoneI_GPIORemoteSetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t number_of_configs)
 {
     bool ret = false;
+	uint16_t length = 4;
 
-    /* payload is 4-byte destination address + pin configuration*/
-    uint16_t commandLength = configLength + 4;
+	for (uint16_t i=0; i < number_of_configs; i++)
+	{
+		switch(configP->function)
+		{
+			case ThyoneI_GPIO_IO_Disconnected:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = 0x00;
+				length += 4;
+			}
+			break;
+			case ThyoneI_GPIO_IO_Input:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = configP->value.input;
+				length += 4;
+			}
+			break;
+			case ThyoneI_GPIO_IO_Output:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = configP->value.output;
+				length += 4;
+			}
+			break;
+			case ThyoneI_GPIO_IO_PWM:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 5;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				memcpy(&CMD_Array[CMD_POSITION_DATA + length + 3], &configP->value.pwm.period, 2);
+				CMD_Array[CMD_POSITION_DATA + length + 5] = configP->value.pwm.ratio;
+				length += 6;
+			}
+			break;
+			default:
+			{
+			}
+			break;
+		}
+		configP++;
+	}
 
     CMD_Array[CMD_POSITION_STX] = CMD_STX;
     CMD_Array[CMD_POSITION_CMD] = ThyoneI_CMD_GPIO_REMOTE_SETCONFIG_REQ;
-    CMD_Array[CMD_POSITION_LENGTH_LSB]= (commandLength & 0x00FF);
-    CMD_Array[CMD_POSITION_LENGTH_MSB]= (commandLength & 0xFF00) >> 8;
+    CMD_Array[CMD_POSITION_LENGTH_LSB]= (length & 0x00FF);
+    CMD_Array[CMD_POSITION_LENGTH_MSB]= (length & 0xFF00) >> 8;
 
     memcpy(&CMD_Array[CMD_POSITION_DATA], &destAddress, 4);
-    memcpy(&CMD_Array[CMD_POSITION_DATA+4], configP, configLength);
 
     if (FillChecksum(CMD_Array, CMD_ARRAY_SIZE()))
     {
@@ -1837,11 +1934,11 @@ bool ThyoneI_GPIORemoteSetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t
  *output:
  * -destAddress: Destination address of the remote Thyone-I device
  * -configP: pointer to one or more pin configurations
- * -configLengthP: length of data configP points to
+ * -number_of_configsP: pointer to number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneI_GPIORemoteGetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t *configLengthP)
+bool ThyoneI_GPIORemoteGetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t *number_of_configsP)
 {
     bool ret = false;
 
@@ -1861,8 +1958,75 @@ bool ThyoneI_GPIORemoteGetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t
 
         if(ret)
         {
-            *configLengthP = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8) - 1 - 4;
-            memcpy(configP, &RxPacket[CMD_POSITION_DATA + 5], *configLengthP);
+			uint16_t length = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8);
+
+			*number_of_configsP = 0;
+			uint8_t* uartP = &RxPacket[CMD_POSITION_DATA+1+4];
+			ThyoneI_GPIOConfigBlock_t* configP_running = configP;
+			while(uartP < &RxPacket[CMD_POSITION_DATA+length])
+			{
+				switch(*(uartP + 2))
+				{
+					case ThyoneI_GPIO_IO_Disconnected:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ThyoneI_GPIO_IO_Input:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							configP_running->value.input = *(uartP + 3);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ThyoneI_GPIO_IO_Output:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							configP_running->value.output = *(uartP + 3);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ThyoneI_GPIO_IO_PWM:
+					{
+						if(*uartP == 5)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							memcpy(&configP_running->value.pwm.period, (uartP + 3), 2);
+							configP_running->value.pwm.ratio = *(uartP + 5);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					default:
+					{
+
+					}
+					break;
+				}
+				uartP += *uartP + 1;
+			}
         }
 
     }
@@ -1877,24 +2041,30 @@ bool ThyoneI_GPIORemoteGetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t
  *input:
  * -destAddress: Destination address of the remote Thyone-I device
  * -controlP: pointer to one or more pin controls
- * -configLength: length of data configP controlP to
+ * -number_of_controls: number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneI_GPIORemoteWrite(uint32_t destAddress, ThyoneI_GPIOControlBlock_t* controlP, uint16_t controlLength)
+bool ThyoneI_GPIORemoteWrite(uint32_t destAddress, ThyoneI_GPIOControlBlock_t* controlP, uint16_t number_of_controls)
 {
     bool ret = false;
+	uint16_t length = 4;
 
-    /* payload is 4-byte destination address + pin configuration*/
-    uint16_t commandLength = controlLength + 4;
+    for (uint16_t i=0; i < number_of_controls; i++)
+	{
+		CMD_Array[CMD_POSITION_DATA + length] = 2;
+		CMD_Array[CMD_POSITION_DATA + length + 1] = controlP->GPIO_ID;
+		CMD_Array[CMD_POSITION_DATA + length + 2] = controlP->value.output;
+		length += 3;
+		controlP += sizeof(ThyoneI_GPIOControlBlock_t);
+	}
 
     CMD_Array[CMD_POSITION_STX] = CMD_STX;
     CMD_Array[CMD_POSITION_CMD] = ThyoneI_CMD_GPIO_REMOTE_WRITE_REQ;
-    CMD_Array[CMD_POSITION_LENGTH_LSB]= (commandLength & 0x00FF);
-    CMD_Array[CMD_POSITION_LENGTH_MSB]= (commandLength & 0xFF00) >> 8;
+    CMD_Array[CMD_POSITION_LENGTH_LSB]= (length & 0x00FF);
+    CMD_Array[CMD_POSITION_LENGTH_MSB]= (length & 0xFF00) >> 8;
 
     memcpy(&CMD_Array[CMD_POSITION_DATA], &destAddress, 4);
-    memcpy(&CMD_Array[CMD_POSITION_DATA+4], controlP, controlLength);
 
     if (FillChecksum(CMD_Array, CMD_ARRAY_SIZE()))
     {
@@ -1918,11 +2088,11 @@ bool ThyoneI_GPIORemoteWrite(uint32_t destAddress, ThyoneI_GPIOControlBlock_t* c
  * -amountGPIOToRead: amount of pins to read and therefore length of GPIOToReadP
  *output:
  * -controlP: Pointer to controlBlock
- * -controlLengthP: length of controlP
+ * -number_of_controlsP: pointer to number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneI_GPIORemoteRead(uint32_t destAddress, uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* controlLengthP)
+bool ThyoneI_GPIORemoteRead(uint32_t destAddress, uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP)
 {
     bool ret = false;
 
@@ -1948,8 +2118,24 @@ bool ThyoneI_GPIORemoteRead(uint32_t destAddress, uint8_t *GPIOToReadP, uint8_t 
 
         if(ret)
         {
-            *controlLengthP = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8) - 1 - 4;
-            memcpy(controlP, &RxPacket[CMD_POSITION_DATA + 5], *controlLengthP);
+			uint16_t length = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8);
+
+			*number_of_controlsP = 0;
+			uint8_t* uartP = &RxPacket[CMD_POSITION_DATA+1+4];
+			ThyoneI_GPIOControlBlock_t* controlP_running = controlP;
+			while(uartP < &RxPacket[CMD_POSITION_DATA+length])
+			{
+
+				if(*uartP == 2)
+				{
+					controlP_running->GPIO_ID = *(uartP + 1);
+					controlP_running->value.output = *(uartP + 2);
+
+					controlP_running++;
+					*number_of_controlsP += 1;
+				}
+				uartP += *uartP + 1;
+			}
         }
     }
 

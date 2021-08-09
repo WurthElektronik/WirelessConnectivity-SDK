@@ -517,7 +517,7 @@ static void HandleRxPacket(uint8_t * pRxBuffer)
             ble_state = ProteusII_State_BLE_Connected;
             if(Connectcallback != NULL)
             {
-                Connectcallback(&RxPacket[CMD_POSITION_DATA]);
+                Connectcallback(&RxPacket[CMD_POSITION_DATA+1]);
             }
             break;
         }
@@ -845,7 +845,7 @@ ProteusII_Disconnect()
         /* now send CMD_ARRAY */
         SendBytes(CMD_Array, CMD_ARRAY_SIZE());
 
-        /* Confirmation is sent before perfoming the disconnect. After disconnect, module sends dicsonnect indication */
+        /* Confirmation is sent before perfoming the disconnect. After disconnect, module sends disconnect indication */
         ret = Wait4CNF(CMD_WAIT_TIME, ProteusII_CMD_DISCONNECT_CNF, CMD_Status_Success, true);
     }
     return ret;

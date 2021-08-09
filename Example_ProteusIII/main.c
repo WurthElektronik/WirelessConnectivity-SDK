@@ -255,7 +255,7 @@ static void ProteusIII_test_function()
 #endif
 
 #if 0
-        int8_t txpower=-50;
+        int8_t txpower = -50;
         ret = ProteusIII_GetTXPower(&txpower);
         Debug_out("ProteusIII_GetTXPower", ret);
         if(ret)
@@ -285,51 +285,57 @@ static void ProteusIII_test_function()
         ProteusIII_GPIOConfigBlock_t configLocalGPIO[ProteusIII_AMOUNT_GPIO_PINS];
 
         /* config GPIO 1 as output high*/
-        configLocalGPIO[0].length = 0x03;
         configLocalGPIO[0].GPIO_ID = ProteusIII_GPIO_1;
-        configLocalGPIO[0].InputOutput = ProteusIII_GPIO_IO_Output;
-        configLocalGPIO[0].value = ProteusIII_GPIO_Output_High;
+        configLocalGPIO[0].function = ProteusIII_GPIO_IO_Output;
+        configLocalGPIO[0].value.output = ProteusIII_GPIO_Output_High;
 
         /* config GPIO 2 as input pullup*/
-        configLocalGPIO[1].length = 0x03;
         configLocalGPIO[1].GPIO_ID = ProteusIII_GPIO_2;
-        configLocalGPIO[1].InputOutput = ProteusIII_GPIO_IO_Input;
-        configLocalGPIO[1].value = ProteusIII_GPIO_Input_PullUp;
+        configLocalGPIO[1].function = ProteusIII_GPIO_IO_Input;
+        configLocalGPIO[1].value.input = ProteusIII_GPIO_Input_PullUp;
 
-        ret = ProteusIII_GPIOLocalWriteConfig(configLocalGPIO, 2*sizeof(ProteusIII_GPIOConfigBlock_t));
+        /* config GPIO 3 as pwm */
+        configLocalGPIO[2].GPIO_ID = ProteusIII_GPIO_3;
+        configLocalGPIO[2].function = ProteusIII_GPIO_IO_PWM;
+
+        ProteusIII_GPIO_PwmValue_t pwmValue;
+        pwmValue.period = 50; /* 50ms period */
+        pwmValue.ratio = 128; /* 50% duty cycle */
+        configLocalGPIO[2].value.pwm = pwmValue;
+
+        ret = ProteusIII_GPIOLocalWriteConfig(configLocalGPIO, 3);
         Debug_out("ProteusIII_GPIO_Local_Write_Config",ret);
         delay(2000);
 
         /* Read config local */
-        uint16_t configLocalLength = 0;
-        ret = ProteusIII_GPIOLocalReadConfig(configLocalGPIO, &configLocalLength);
+        uint16_t number_of_configs = 0;
+        ret = ProteusIII_GPIOLocalReadConfig(configLocalGPIO, &number_of_configs);
         Debug_out("ProteusIII_GPIOLocalReadConfig",ret);
 
         /* Write local */
         ProteusIII_GPIOControlBlock_t controlLocalGPIO;
 
         /* set GPIO 1 to low */
-        controlLocalGPIO.length = 0x02;
         controlLocalGPIO.GPIO_ID = ProteusIII_GPIO_1;
-        controlLocalGPIO.value = ProteusIII_GPIO_Output_Low;
+        controlLocalGPIO.value.output = ProteusIII_GPIO_Output_Low;
 
-        ret = ProteusIII_GPIOLocalWrite(&controlLocalGPIO, sizeof(ProteusIII_GPIOControlBlock_t));
+        ret = ProteusIII_GPIOLocalWrite(&controlLocalGPIO, 1);
         Debug_out("ProteusIII_GPIOLocalWrite - Set GPIO 1 to low", ret);
         delay(500);
 
         /* Read local pin */
         /* Read GPIO 1 and 2 */
         ProteusIII_GPIOControlBlock_t readLocalGPIO[2];
-        uint16_t readLocalPinLength = 0;
+        uint16_t number_of_controls = 0;
 
         uint8_t GPIOToReadLocal[2];
         GPIOToReadLocal[0] = ProteusIII_GPIO_1;
         GPIOToReadLocal[1] = ProteusIII_GPIO_2;
 
-        ret = ProteusIII_GPIOLocalRead(GPIOToReadLocal, 2, readLocalGPIO, &readLocalPinLength);
+        ret = ProteusIII_GPIOLocalRead(GPIOToReadLocal, 2, readLocalGPIO, &number_of_controls);
         Debug_out("ProteusIII_GPIOLocalRead", ret);
-        printf("GPIO %x: %x \n", readLocalGPIO[0].GPIO_ID, readLocalGPIO[0].value);
-        printf("GPIO %x: %x \n", readLocalGPIO[1].GPIO_ID, readLocalGPIO[1].value);
+        printf("GPIO %x: %x \n", readLocalGPIO[0].GPIO_ID, readLocalGPIO[0].value.output);
+        printf("GPIO %x: %x \n", readLocalGPIO[1].GPIO_ID, readLocalGPIO[1].value.output);
 
 #endif // 1
 #if 0
@@ -361,22 +367,20 @@ static void ProteusIII_test_function()
                 /* Config remote */
                 ProteusIII_GPIOConfigBlock_t configRemoteGPIO[ProteusIII_AMOUNT_GPIO_PINS];
                 /* config GPIO 1 as output high */
-                configRemoteGPIO[0].length = 0x03;
                 configRemoteGPIO[0].GPIO_ID = ProteusIII_GPIO_1;
-                configRemoteGPIO[0].InputOutput = ProteusIII_GPIO_IO_Output;
-                configRemoteGPIO[0].value = ProteusIII_GPIO_Output_High;
+                configRemoteGPIO[0].function = ProteusIII_GPIO_IO_Output;
+                configRemoteGPIO[0].value.output = ProteusIII_GPIO_Output_High;
 
                 /* config GPIO 2 as input pulldown */
-                configRemoteGPIO[1].length = 0x03;
                 configRemoteGPIO[1].GPIO_ID = ProteusIII_GPIO_2;
-                configRemoteGPIO[1].InputOutput = ProteusIII_GPIO_IO_Input;
-                configRemoteGPIO[1].value = ProteusIII_GPIO_Input_PullUp;
+                configRemoteGPIO[1].function = ProteusIII_GPIO_IO_Input;
+                configRemoteGPIO[1].value.input = ProteusIII_GPIO_Input_PullUp;
 
-                ret = ProteusIII_GPIORemoteWriteConfig(configRemoteGPIO, 2*sizeof(ProteusIII_GPIOConfigBlock_t));
+                ret = ProteusIII_GPIORemoteWriteConfig(configRemoteGPIO, 2);
                 Debug_out("ProteusIII_GPIORemoteWriteConfig",ret);
 
-                uint16_t configRemoteLength = 0;
-                ret = ProteusIII_GPIORemoteReadConfig(configRemoteGPIO,&configRemoteLength);
+                uint16_t number_of_configs = 0;
+                ret = ProteusIII_GPIORemoteReadConfig(configRemoteGPIO,&number_of_configs);
                 Debug_out("ProteusIII_GPIORemoteReadConfig", ret);
                 delay(1000);
 
@@ -384,24 +388,23 @@ static void ProteusIII_test_function()
                 ProteusIII_GPIOControlBlock_t controlRemoteGPIO;
 
                 /* set GPIO 1 to low */
-                controlRemoteGPIO.length = 0x02;
                 controlRemoteGPIO.GPIO_ID = ProteusIII_GPIO_1;
-                controlRemoteGPIO.value = ProteusIII_GPIO_Output_Low;
+                controlRemoteGPIO.value.output = ProteusIII_GPIO_Output_Low;
 
-                ret = ProteusIII_GPIORemoteWrite(&controlRemoteGPIO, sizeof(ProteusIII_GPIOControlBlock_t));
+                ret = ProteusIII_GPIORemoteWrite(&controlRemoteGPIO, 1);
                 Debug_out("ProteusIII_GPIORemoteWrite - Set GPIO 1 to low", ret);
                 delay(500);
 
                 /* Read local pin */
                 /* Read GPIO 1 and 2 */
                 ProteusIII_GPIOControlBlock_t readRemoteGPIO[2];
-                uint16_t readRemotePinLength = 0;
+                uint16_t number_of_controls = 0;
 
                 uint8_t GPIOToReadRemote[2];
                 GPIOToReadRemote[0] = ProteusIII_GPIO_1;
                 GPIOToReadRemote[1] = ProteusIII_GPIO_2;
 
-                ret = ProteusIII_GPIORemoteRead(GPIOToReadRemote, 2, readRemoteGPIO, &readRemotePinLength);
+                ret = ProteusIII_GPIORemoteRead(GPIOToReadRemote, 2, readRemoteGPIO, &number_of_controls);
                 Debug_out("ProteusIII_GPIORemoteRead", ret);
                 if(ret)
                 {

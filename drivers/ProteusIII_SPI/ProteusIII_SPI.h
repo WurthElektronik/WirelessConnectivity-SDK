@@ -88,8 +88,10 @@ typedef enum ProteusIII_SPI_GPIO_t
 
 typedef enum ProteusIII_SPI_GPIO_IO_t
 {
-    ProteusIII_SPI_GPIO_IO_Input  = (uint8_t)0x01,
-    ProteusIII_SPI_GPIO_IO_Output = (uint8_t)0x02
+    ProteusIII_SPI_GPIO_IO_Disconnected  = (uint8_t)0x00,
+    ProteusIII_SPI_GPIO_IO_Input         = (uint8_t)0x01,
+    ProteusIII_SPI_GPIO_IO_Output        = (uint8_t)0x02,
+    ProteusIII_SPI_GPIO_IO_PWM           = (uint8_t)0x03
 } ProteusIII_SPI_GPIO_IO_t;
 
 typedef enum ProteusIII_SPI_GPIO_Output_t
@@ -105,17 +107,29 @@ typedef enum ProteusIII_SPI_GPIO_Input_t
     ProteusIII_SPI_GPIO_Input_PullUp   = (uint8_t)0x02
 } ProteusIII_SPI_GPIO_Input_t;
 
+typedef struct ProteusIII_SPI_GPIO_PwmValue_t{
+    uint16_t period; /* in ms */
+    uint8_t  ratio;  /* 0-255 (0%-100%)*/
+} ProteusIII_SPI_GPIO_PwmValue_t;
+
 typedef struct ProteusIII_SPI_GPIOConfigBlock_t{
-    uint8_t length;
-    uint8_t GPIO_ID;
-    uint8_t InputOutput;
-    uint8_t value;
+    ProteusIII_SPI_GPIO_t GPIO_ID;
+    ProteusIII_SPI_GPIO_IO_t function;
+    union /* 3Byte */
+    {
+        ProteusIII_SPI_GPIO_PwmValue_t pwm;
+        ProteusIII_SPI_GPIO_Input_t input;
+        ProteusIII_SPI_GPIO_Output_t output;
+    } value;
 } ProteusIII_SPI_GPIOConfigBlock_t;
 
 typedef struct ProteusIII_SPI_GPIOControlBlock_t{
-    uint8_t length;
-    uint8_t GPIO_ID;
-    uint8_t value;
+    ProteusIII_SPI_GPIO_t GPIO_ID;
+    union /* 1Byte */
+    {
+        ProteusIII_SPI_GPIO_Output_t output;
+		uint8_t ratio;  /* 0-255 (0%-100%)*/
+    } value;
 } ProteusIII_SPI_GPIOControlBlock_t;
 
 typedef enum ProteusIII_SPI_States_t {
@@ -175,19 +189,30 @@ typedef enum ProteusIII_SPI_UserSettings_t {
     ProteusIII_SPI_USERSETTING_POSITION_RF_CFGFLAGS =              (uint8_t)0x1C,
 	ProteusIII_SPI_USERSETTING_POSITION_RF_ADVERTISING_FLAGS =     (uint8_t)0x1D,
 	ProteusIII_SPI_USERSETTING_POSITION_SPI_CONFIGINDEX =          (uint8_t)0x1E,
+    ProteusIII_SPI_USERSETTING_POSITION_RF_SPPServiceUUID =        (uint8_t)0x20,
+    ProteusIII_SPI_USERSETTING_POSITION_RF_SPPRXUUID =             (uint8_t)0x21,
+    ProteusIII_SPI_USERSETTING_POSITION_RF_SPPTXUUID =             (uint8_t)0x22,
 } ProteusIII_SPI_UserSettings_t;
 
-#define SEC_MODE_BONDING_ENABLE_MASK (uint8_t)0x08
+#define SEC_MODE_BONDING_ENABLE_MASK          (uint8_t)0x08
+#define SEC_MODE_BONDEDCONNECTIONSONLY_ENABLE (uint8_t)0x10
 typedef enum ProteusIII_SPI_SecFlags_t {
-    ProteusIII_SPI_SecFlags_NONE =                  (uint8_t)0x00,
-    ProteusIII_SPI_SecFlags_JustWorks =             (uint8_t)0x02,
-    ProteusIII_SPI_SecFlags_StaticPassKey =         (uint8_t)0x03,
-    ProteusIII_SPI_SecFlags_LescNumCompare =        (uint8_t)0x04,
-    ProteusIII_SPI_SecFlags_LescPassKey =           (uint8_t)0x05,
-    ProteusIII_SPI_SecFlags_JustWorks_Bonding =     (uint8_t)(ProteusIII_SPI_SecFlags_JustWorks | SEC_MODE_BONDING_ENABLE_MASK),
-    ProteusIII_SPI_SecFlags_StaticPassKey_Bonding = (uint8_t)(ProteusIII_SPI_SecFlags_StaticPassKey | SEC_MODE_BONDING_ENABLE_MASK),
-	ProteusIII_SPI_SecFlags_LescNumCompare_Bonding =(uint8_t)(ProteusIII_SPI_SecFlags_LescNumCompare | SEC_MODE_BONDING_ENABLE_MASK),
-    ProteusIII_SPI_SecFlags_LescPassKey_Bonding =   (uint8_t)(ProteusIII_SPI_SecFlags_LescPassKey | SEC_MODE_BONDING_ENABLE_MASK),
+    ProteusIII_SPI_SecFlags_NONE =                       (uint8_t)0x00,
+    ProteusIII_SPI_SecFlags_LescJustWorks =              (uint8_t)0x01,
+    ProteusIII_SPI_SecFlags_JustWorks =                  (uint8_t)0x02,
+    ProteusIII_SPI_SecFlags_StaticPassKey =              (uint8_t)0x03,
+    ProteusIII_SPI_SecFlags_LescNumCompare =             (uint8_t)0x04,
+    ProteusIII_SPI_SecFlags_LescPassKey =                (uint8_t)0x05,
+    ProteusIII_SPI_SecFlags_LescJustWorks_Bonding =      (uint8_t)(ProteusIII_SPI_SecFlags_LescJustWorks | SEC_MODE_BONDING_ENABLE_MASK),
+    ProteusIII_SPI_SecFlags_JustWorks_Bonding =          (uint8_t)(ProteusIII_SPI_SecFlags_JustWorks | SEC_MODE_BONDING_ENABLE_MASK),
+    ProteusIII_SPI_SecFlags_StaticPassKey_Bonding =      (uint8_t)(ProteusIII_SPI_SecFlags_StaticPassKey | SEC_MODE_BONDING_ENABLE_MASK),
+	ProteusIII_SPI_SecFlags_LescNumCompare_Bonding =     (uint8_t)(ProteusIII_SPI_SecFlags_LescNumCompare | SEC_MODE_BONDING_ENABLE_MASK),
+    ProteusIII_SPI_SecFlags_LescPassKey_Bonding =        (uint8_t)(ProteusIII_SPI_SecFlags_LescPassKey | SEC_MODE_BONDING_ENABLE_MASK),
+    ProteusIII_SPI_SecFlags_LescJustWorks_BondingOnly =  (uint8_t)(ProteusIII_SPI_SecFlags_LescJustWorks | SEC_MODE_BONDING_ENABLE_MASK | SEC_MODE_BONDEDCONNECTIONSONLY_ENABLE),
+    ProteusIII_SPI_SecFlags_JustWorks_BondingOnly =      (uint8_t)(ProteusIII_SPI_SecFlags_JustWorks | SEC_MODE_BONDING_ENABLE_MASK | SEC_MODE_BONDEDCONNECTIONSONLY_ENABLE),
+    ProteusIII_SPI_SecFlags_StaticPassKey_BondingOnly =  (uint8_t)(ProteusIII_SPI_SecFlags_StaticPassKey | SEC_MODE_BONDING_ENABLE_MASK | SEC_MODE_BONDEDCONNECTIONSONLY_ENABLE),
+	ProteusIII_SPI_SecFlags_LescNumCompare_BondingOnly = (uint8_t)(ProteusIII_SPI_SecFlags_LescNumCompare | SEC_MODE_BONDING_ENABLE_MASK | SEC_MODE_BONDEDCONNECTIONSONLY_ENABLE),
+    ProteusIII_SPI_SecFlags_LescPassKey_BondingOnly =    (uint8_t)(ProteusIII_SPI_SecFlags_LescPassKey | SEC_MODE_BONDING_ENABLE_MASK | SEC_MODE_BONDEDCONNECTIONSONLY_ENABLE),
 } ProteusIII_SPI_SecFlags_t;
 
 typedef enum ProteusIII_SPI_ConnectionTiming_t {
@@ -298,15 +323,17 @@ extern bool ProteusIII_SPI_PhyUpdate(ProteusIII_SPI_Phy_t phy);
 extern ProteusIII_SPI_States_t ProteusIII_SPI_GetDriverState();
 
 /* functions to control the GPIO feature */
-extern bool ProteusIII_SPI_GPIOLocalWriteConfig(ProteusIII_SPI_GPIOConfigBlock_t* configP, uint16_t configLength);
-extern bool ProteusIII_SPI_GPIOLocalReadConfig(ProteusIII_SPI_GPIOConfigBlock_t* configP, uint16_t* configLengthP);
-extern bool ProteusIII_SPI_GPIOLocalWrite(ProteusIII_SPI_GPIOControlBlock_t* controlP, uint16_t controlLength);
-extern bool ProteusIII_SPI_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIII_SPI_GPIOControlBlock_t* controlP, uint16_t* controlLengthP);
+extern bool ProteusIII_SPI_GPIOLocalWriteConfig(ProteusIII_SPI_GPIOConfigBlock_t* configP, uint16_t number_of_configs);
+extern bool ProteusIII_SPI_GPIOLocalReadConfig(ProteusIII_SPI_GPIOConfigBlock_t* configP, uint16_t* number_of_configsP);
+extern bool ProteusIII_SPI_GPIOLocalWrite(ProteusIII_SPI_GPIOControlBlock_t* controlP, uint16_t number_of_controls);
+extern bool ProteusIII_SPI_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIII_SPI_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP);
 
-extern bool ProteusIII_SPI_GPIORemoteWriteConfig(ProteusIII_SPI_GPIOConfigBlock_t* configP, uint16_t configLength);
-extern bool ProteusIII_SPI_GPIORemoteReadConfig(ProteusIII_SPI_GPIOConfigBlock_t* configP, uint16_t* configLengthP);
-extern bool ProteusIII_SPI_GPIORemoteWrite(ProteusIII_SPI_GPIOControlBlock_t* controlP, uint16_t controlLength);
-extern bool ProteusIII_SPI_GPIORemoteRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIII_SPI_GPIOControlBlock_t* controlP, uint16_t* controlLengthP);
+extern bool ProteusIII_SPI_GPIORemoteWriteConfig(ProteusIII_SPI_GPIOConfigBlock_t* configP, uint16_t number_of_configs);
+extern bool ProteusIII_SPI_GPIORemoteReadConfig(ProteusIII_SPI_GPIOConfigBlock_t* configP, uint16_t* number_of_configsP);
+extern bool ProteusIII_SPI_GPIORemoteWrite(ProteusIII_SPI_GPIOControlBlock_t* controlP, uint16_t number_of_controls);
+extern bool ProteusIII_SPI_GPIORemoteRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIII_SPI_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP);
+
+extern bool ProteusIII_SPI_Allowunbondedconnections();
 
 /* functions that write the non-volatile settings in the flash,
  * after modification of any non-volatile setting, the module must be reset such that the update takes effect

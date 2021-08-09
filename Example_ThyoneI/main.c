@@ -192,7 +192,7 @@ static void ThyoneI_test_function()
 
 #endif
 
-#if 1
+#if 0
         /* Group ID */
         uint8_t groupIDSet = 0x16;
         uint8_t groupIDGet = 0;
@@ -278,7 +278,7 @@ static void ThyoneI_test_function()
 
 #endif
 
-#if 1
+#if 0
 
         uint8_t payload[11] = { 'H', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'};
 
@@ -329,51 +329,66 @@ static void ThyoneI_test_function()
         ThyoneI_GPIOConfigBlock_t configLocalGPIO[ThyoneI_AMOUNT_GPIO_PINS];
 
         /* config GPIO 1 as output high*/
-        configLocalGPIO[0].length = 0x03;
-        configLocalGPIO[0].GPIO_ID = ThyoneI_GPIO_1;
-        configLocalGPIO[0].InputOutput = ThyoneI_GPIO_IO_Output;
-        configLocalGPIO[0].value = ThyoneI_GPIO_Output_Low;
+        configLocalGPIO[0].GPIO_ID = ThyoneI_GPIO_4;
+        configLocalGPIO[0].function = ThyoneI_GPIO_IO_Output;
+        configLocalGPIO[0].value.output = ThyoneI_GPIO_Output_Low;
 
         /* config GPIO 2 as input pullup*/
-        configLocalGPIO[1].length = 0x03;
-        configLocalGPIO[1].GPIO_ID = ThyoneI_GPIO_2;
-        configLocalGPIO[1].InputOutput = ThyoneI_GPIO_IO_Input;
-        configLocalGPIO[1].value = ThyoneI_GPIO_Input_PullUp;
+        configLocalGPIO[1].GPIO_ID = ThyoneI_GPIO_5;
+        configLocalGPIO[1].function = ThyoneI_GPIO_IO_Input;
+        configLocalGPIO[1].value.input = ThyoneI_GPIO_Input_PullUp;
 
-        ret = ThyoneI_GPIOLocalSetConfig(configLocalGPIO, 2*sizeof(ThyoneI_GPIOConfigBlock_t));
+        /* config GPIO 3 as pwm */
+        configLocalGPIO[2].GPIO_ID = ThyoneI_GPIO_3;
+        configLocalGPIO[2].function = ThyoneI_GPIO_IO_PWM;
+
+        ThyoneI_GPIO_PwmValue_t pwmValue;
+        pwmValue.period = 50; /* 50ms period */
+        pwmValue.ratio = 128; /* 50% duty cycle */
+        configLocalGPIO[2].value.pwm = pwmValue;
+
+        ret = ThyoneI_GPIOLocalSetConfig(configLocalGPIO, 3);
         Debug_out("ThyoneI_GPIO_Local_Write_Config",ret);
         delay(2000);
 
-        uint16_t configLength = 0;
-        ret = ThyoneI_GPIOLocalGetConfig(configLocalGPIO, &configLength);
+        uint16_t number_of_configs = 0;
+        memset(configLocalGPIO, 0, sizeof(configLocalGPIO)* ThyoneI_AMOUNT_GPIO_PINS);
+
+        ret = ThyoneI_GPIOLocalGetConfig(configLocalGPIO, &number_of_configs);
         Debug_out("ThyoneI_GPIORemoteWriteConfig",ret);
 
-
+        for(int i = 0; i < number_of_configs; i++)
+        {
+            printf("Pin %i; function: %i\n", configLocalGPIO[i].GPIO_ID, configLocalGPIO[i].function);
+            if(configLocalGPIO[i].function == ThyoneI_GPIO_IO_PWM)
+            {
+                printf("pwm period: %i, ratio: %i \n", configLocalGPIO[i].value.pwm.period, configLocalGPIO[i].value.pwm.ratio);
+            }
+        }
 
         /* Write local */
         ThyoneI_GPIOControlBlock_t controlLocalGPIO[ThyoneI_AMOUNT_GPIO_PINS];
 
         /* set GPIO 1 to low */
-        controlLocalGPIO[0].length = 0x02;
-        controlLocalGPIO[0].GPIO_ID = ThyoneI_GPIO_1;
-        controlLocalGPIO[0].value = ThyoneI_GPIO_Output_High;
+        controlLocalGPIO[0].GPIO_ID = ThyoneI_GPIO_4;
+        controlLocalGPIO[0].value.output = ThyoneI_GPIO_Output_High;
 
-        ret = ThyoneI_GPIOLocalWrite(controlLocalGPIO, sizeof(ThyoneI_GPIOControlBlock_t));
+        ret = ThyoneI_GPIOLocalWrite(controlLocalGPIO, 1);
         Debug_out("ThyoneI_GPIOLocalWrite - Set GPIO 1 to low", ret);
         delay(500);
 
         /* Read local pin */
         /* Read GPIO 1 and 2 */
-        uint16_t readLocalLength = 0;
+        uint16_t number_of_controls = 0;
 
         uint8_t GPIOToRead[2];
-        GPIOToRead[0] = ThyoneI_GPIO_1;
-        GPIOToRead[1] = ThyoneI_GPIO_2;
+        GPIOToRead[0] = ThyoneI_GPIO_4;
+        GPIOToRead[1] = ThyoneI_GPIO_5;
 
-        ret = ThyoneI_GPIOLocalRead(GPIOToRead, 2, controlLocalGPIO, &readLocalLength);
+        ret = ThyoneI_GPIOLocalRead(GPIOToRead, 2, controlLocalGPIO, &number_of_controls);
         Debug_out("ThyoneI_GPIOLocalRead", ret);
-        printf("GPIO %x: %x \n", controlLocalGPIO[0].GPIO_ID, controlLocalGPIO[0].value);
-        printf("GPIO %x: %x \n", controlLocalGPIO[1].GPIO_ID, controlLocalGPIO[1].value);
+        printf("GPIO %x: %x \n", controlLocalGPIO[0].GPIO_ID, controlLocalGPIO[0].value.output);
+        printf("GPIO %x: %x \n", controlLocalGPIO[1].GPIO_ID, controlLocalGPIO[1].value.output);
 
 #endif
 #if 0
@@ -384,23 +399,21 @@ static void ThyoneI_test_function()
         uint32_t destAddressSet = 0x22222222;
 
         /* config GPIO 1 as output high*/
-        configRemoteGPIO[0].length = 0x03;
         configRemoteGPIO[0].GPIO_ID = ThyoneI_GPIO_1;
         configRemoteGPIO[0].InputOutput = ThyoneI_GPIO_IO_Output;
-        configRemoteGPIO[0].value = ThyoneI_GPIO_Output_High;
+        configRemoteGPIO[0].value.output = ThyoneI_GPIO_Output_High;
 
         /* config GPIO 2 as input pulldown*/
-        configRemoteGPIO[1].length = 0x03;
         configRemoteGPIO[1].GPIO_ID = ThyoneI_GPIO_2;
         configRemoteGPIO[1].InputOutput = ThyoneI_GPIO_IO_Input;
-        configRemoteGPIO[1].value = ThyoneI_GPIO_Input_PullUp;
+        configRemoteGPIO[1].value.input = ThyoneI_GPIO_Input_PullUp;
 
-        ret = ThyoneI_GPIORemoteSetConfig(destAddressSet, configRemoteGPIO, 2*sizeof(ThyoneI_GPIOConfigBlock_t));
+        ret = ThyoneI_GPIORemoteSetConfig(destAddressSet, configRemoteGPIO, 2);
         Debug_out("ThyoneI_GPIORemoteWriteConfig",ret);
         delay(500);
 
-        uint16_t remoteConfigLength = 0;
-        ret = ThyoneI_GPIORemoteGetConfig(destAddressSet, configRemoteGPIO, &remoteConfigLength);
+        uint16_t number_of_configs = 0;
+        ret = ThyoneI_GPIORemoteGetConfig(destAddressSet, configRemoteGPIO, &number_of_configs);
         Debug_out("ThyoneI_GPIORemoteWriteConfig",ret);
 
 
@@ -408,11 +421,10 @@ static void ThyoneI_test_function()
         ThyoneI_GPIOControlBlock_t controlRemoteGPIO[ThyoneI_AMOUNT_GPIO_PINS];
 
         /* set GPIO 1 to low */
-        controlRemoteGPIO[0].length = 0x02;
         controlRemoteGPIO[0].GPIO_ID = ThyoneI_GPIO_1;
-        controlRemoteGPIO[0].value = ThyoneI_GPIO_Output_Low;
+        controlRemoteGPIO[0].value.output = ThyoneI_GPIO_Output_Low;
 
-        ret = ThyoneI_GPIORemoteWrite(destAddressSet, controlRemoteGPIO, sizeof(ThyoneI_GPIOControlBlock_t));
+        ret = ThyoneI_GPIORemoteWrite(destAddressSet, controlRemoteGPIO, 1);
         Debug_out("ThyoneI_GPIORemoteWrite - Set GPIO 1 to low", ret);
         delay(500);
 
@@ -420,14 +432,14 @@ static void ThyoneI_test_function()
         RemoteGPIOToRead[0] = ThyoneI_GPIO_1;
         RemoteGPIOToRead[1] = ThyoneI_GPIO_2;
 
-        uint16_t readRemoteLength = 0;
+        uint16_t number_of_controls = 0;
         /* Read GPIO 1 and 2 */
-        ret = ThyoneI_GPIORemoteRead(destAddressSet, RemoteGPIOToRead, 2, controlRemoteGPIO, &readRemoteLength);
+        ret = ThyoneI_GPIORemoteRead(destAddressSet, RemoteGPIOToRead, 2, controlRemoteGPIO, &number_of_controls);
         Debug_out("ThyoneI_GPIORemoteRead", ret);
         if(ret)
         {
-            printf("GPIO %x: %x \n", controlRemoteGPIO[0].GPIO_ID, controlRemoteGPIO[0].value);
-            printf("GPIO %x: %x \n", controlRemoteGPIO[1].GPIO_ID, controlRemoteGPIO[1].value);
+            printf("GPIO %x: %x \n", controlRemoteGPIO[0].GPIO_ID, controlRemoteGPIO[0].value.output);
+            printf("GPIO %x: %x \n", controlRemoteGPIO[1].GPIO_ID, controlRemoteGPIO[1].value.output);
         }
 
 #endif

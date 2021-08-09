@@ -667,78 +667,17 @@ bool ProteusIIIPlug_PhyUpdate(ProteusIIIPlug_Phy_t phy)
 }
 
 /*
- *Configure the local GPIO of the module
- *
- *input:
- * -configP: pointer to one or more pin configurations
- * -configLength: length of data configP points to
- *return true if request succeeded
- *       false otherwise
- */
-bool ProteusIIIPlug_GPIOLocalWriteConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t configLength)
-{
-    return ProteusIII_GPIOLocalWriteConfig(configP, configLength);
-}
-
-/*
- *Read the local GPIO configuration of the module
- *
- *output:
- * -configP: pointer to one or more pin configurations
- * -configLengthP: length of data configP points to
- *return true if request succeeded
- *       false otherwise
- */
-bool ProteusIIIPlug_GPIOLocalReadConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t *configLengthP)
-{
-    return ProteusIII_GPIOLocalReadConfig(configP, configLengthP);
-}
-
-/*
- *Set the output value of the local pin. Pin has to be configured first.
- *See ProteusIIIPlug_GPIOLocalWriteConfig
- *
- *input:
- * -controlP: pointer to one or more pin controls
- * -configLength: length of data configP controlP to
- *return true if request succeeded
- *       false otherwise
- */
-bool ProteusIIIPlug_GPIOLocalWrite(ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t controlLength)
-{
-    return ProteusIII_GPIOLocalWrite(controlP, controlLength);
-}
-
-/*
- *Read the input of the pin. Pin has to be configured first.
- *See ProteusIIIPlug_GPIOLocalWriteConfig
- *
- *input:
- * -GPIOToReadP: One or more pins to read.
- * -amountGPIOToRead: amount of pins to read and therefore length of GPIOToRead
- *output:
- * -controlP: Pointer to controlBlock
- * -controlLengthP: length of controlP
- *return true if request succeeded
- *       false otherwise
- */
-bool ProteusIIIPlug_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t* controlLengthP)
-{
-    return ProteusIII_GPIOLocalRead(GPIOToReadP, amountGPIOToRead, controlP, controlLengthP);
-}
-
-/*
  *Configure the remote GPIO of the module
  *
  *input:
  * -configP: pointer to one or more pin configurations
- * -configLength: length of data configP points to
+ * -number_of_configs: number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIIIPlug_GPIORemoteWriteConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t configLength)
+bool ProteusIIIPlug_GPIORemoteWriteConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t number_of_configs)
 {
-    return ProteusIII_GPIORemoteWriteConfig(configP, configLength);
+    return ProteusIII_GPIORemoteWriteConfig(configP, number_of_configs);
 }
 
 /*
@@ -746,13 +685,13 @@ bool ProteusIIIPlug_GPIORemoteWriteConfig(ProteusIIIPlug_GPIOConfigBlock_t* conf
  *
  *output:
  * -configP: pointer to one or more pin configurations
- * -configLengthP: length of data configP points to
+ * -number_of_configsP: pointer to number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIIIPlug_GPIORemoteReadConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t *configLengthP)
+bool ProteusIIIPlug_GPIORemoteReadConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t *number_of_configsP)
 {
-    return ProteusIII_GPIORemoteReadConfig(configP, configLengthP);
+    return ProteusIII_GPIORemoteReadConfig(configP, number_of_configsP);
 }
 
 /*
@@ -761,13 +700,13 @@ bool ProteusIIIPlug_GPIORemoteReadConfig(ProteusIIIPlug_GPIOConfigBlock_t* confi
  *
  *input:
  * -controlP: pointer to one or more pin controls
- * -configLength: length of data configP controlP to
+ * -number_of_controls: number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIIIPlug_GPIORemoteWrite(ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t controlLength)
+bool ProteusIIIPlug_GPIORemoteWrite(ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t number_of_controls)
 {
-    return ProteusIII_GPIORemoteWrite(controlP, controlLength);
+    return ProteusIII_GPIORemoteWrite(controlP, number_of_controls);
 }
 
 /*
@@ -779,12 +718,12 @@ bool ProteusIIIPlug_GPIORemoteWrite(ProteusIIIPlug_GPIOControlBlock_t* controlP,
  * -amountGPIOToRead: amount of pins to read and therefore length of GPIOToReadP
  *output:
  * -controlP: Pointer to controlBlock
- * -controlLengthP: length of controlP
+ * -number_of_controlsP: pointer to number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIIIPlug_GPIORemoteRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t* controlLengthP)
+bool ProteusIIIPlug_GPIORemoteRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP)
 {
-    return ProteusIII_GPIORemoteRead(GPIOToReadP, amountGPIOToRead, controlP, controlLengthP);
+    return ProteusIII_GPIORemoteRead(GPIOToReadP, amountGPIOToRead, controlP, number_of_controlsP);
 }
 

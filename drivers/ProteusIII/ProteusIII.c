@@ -18,7 +18,7 @@
  * FOR MORE INFORMATION PLEASE CAREFULLY READ THE LICENSE AGREEMENT FILE LOCATED
  * IN THE ROOT DIRECTORY OF THIS DRIVER PACKAGE.
  *
- * COPYRIGHT (c) 2020 Würth Elektronik eiSos GmbH & Co. KG
+ * COPYRIGHT (c) 2021 Würth Elektronik eiSos GmbH & Co. KG
  *
  ***************************************************************************************************
  **/
@@ -167,6 +167,10 @@
 #define ProteusIII_CMD_GPIO_REMOTE_READ (uint8_t)0x2A
 #define ProteusIII_CMD_GPIO_REMOTE_READ_REQ (ProteusIII_CMD_GPIO_REMOTE_READ | ProteusIII_CMD_TYPE_REQ)
 #define ProteusIII_CMD_GPIO_REMOTE_READ_CNF (ProteusIII_CMD_GPIO_REMOTE_READ | ProteusIII_CMD_TYPE_CNF)
+
+#define ProteusIII_CMD_ALLOWUNBONDEDCONNECTIONS        (uint8_t)0x2D
+#define ProteusIII_CMD_ALLOWUNBONDEDCONNECTIONS_REQ    (ProteusIII_CMD_ALLOWUNBONDEDCONNECTIONS | ProteusIII_CMD_TYPE_REQ)
+#define ProteusIII_CMD_ALLOWUNBONDEDCONNECTIONS_CNF    (ProteusIII_CMD_ALLOWUNBONDEDCONNECTIONS | ProteusIII_CMD_TYPE_CNF)
 
 #define CMD_ARRAY_SIZE() ((((uint16_t)CMD_Array[CMD_POSITION_LENGTH_LSB] << 0) | ((uint16_t)CMD_Array[CMD_POSITION_LENGTH_MSB] << 8)) + LENGTH_CMD_OVERHEAD)
 
@@ -327,13 +331,7 @@ void *rx_thread()
  *Initialize the ProteusIII and driver
  *
  *input:
- * -RXcb:      RX callback function
- * -Ccb:       Connect callback function
- * -DCcb:      Disconnect callback function
- * -COcb:      Channel open callback function
- * -Scb:       Security callback function
- * -DPKcb:     Display Passkey callback function
- * -PKcb:      Passkey callback function
+ * -callbackConfig  Function pointers for callbacks
  *
  *return true if initialization succeeded
  *       false otherwise
@@ -402,27 +400,6 @@ static void HandleRxPacket(uint8_t * pRxBuffer)
 
     switch (RxPacket[CMD_POSITION_CMD])
     {
-    case ProteusIII_CMD_RESET_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_SCANSTART_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_SCANSTOP_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
     case ProteusIII_CMD_GETDEVICES_CNF:
     {
         cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
@@ -451,29 +428,28 @@ static void HandleRxPacket(uint8_t * pRxBuffer)
         }
         break;
     }
-
+    case ProteusIII_CMD_RESET_CNF:
+    case ProteusIII_CMD_SCANSTART_CNF:
+    case ProteusIII_CMD_SCANSTOP_CNF:
     case ProteusIII_CMD_GET_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
     case ProteusIII_CMD_SET_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
     case ProteusIII_CMD_PASSKEY_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
     case ProteusIII_CMD_PHYUPDATE_CNF:
+    case ProteusIII_CMD_CONNECT_CNF:
+    case ProteusIII_CMD_DATA_CNF:
+    case ProteusIII_CMD_DISCONNECT_CNF:
+    case ProteusIII_CMD_FACTORYRESET_CNF:
+    case ProteusIII_CMD_SLEEP_CNF:
+    case ProteusIII_CMD_GPIO_LOCAL_WRITECONFIG_CNF:
+    case ProteusIII_CMD_GPIO_LOCAL_READCONFIG_CNF:
+    case ProteusIII_CMD_GPIO_LOCAL_WRITE_CNF:
+    case ProteusIII_CMD_GPIO_LOCAL_READ_CNF:
+    case ProteusIII_CMD_GPIO_REMOTE_WRITECONFIG_CNF:
+    case ProteusIII_CMD_GPIO_REMOTE_READCONFIG_CNF:
+    case ProteusIII_CMD_GPIO_REMOTE_WRITE_CNF:
+    case ProteusIII_CMD_GPIO_REMOTE_READ_CNF:
+    case ProteusIII_CMD_ALLOWUNBONDEDCONNECTIONS_CNF:
+    case ProteusIII_CMD_TXCOMPLETE_RSP:
     {
         cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
         cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
@@ -483,105 +459,8 @@ static void HandleRxPacket(uint8_t * pRxBuffer)
     case ProteusIII_CMD_GETSTATE_CNF:
     {
         cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
+        /* GETSTATE_CNF has no status field*/
         cmdConfirmation.status = CMD_Status_NoStatus;
-        break;
-    }
-
-    case ProteusIII_CMD_CONNECT_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_DATA_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_DISCONNECT_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_FACTORYRESET_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_SLEEP_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_GPIO_LOCAL_WRITECONFIG_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_GPIO_LOCAL_READCONFIG_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_GPIO_LOCAL_WRITE_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_GPIO_LOCAL_READ_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_GPIO_REMOTE_WRITECONFIG_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_GPIO_REMOTE_READCONFIG_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_GPIO_REMOTE_WRITE_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_GPIO_REMOTE_READ_CNF:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
-        break;
-    }
-
-    case ProteusIII_CMD_TXCOMPLETE_RSP:
-    {
-        cmdConfirmation.cmd = RxPacket[CMD_POSITION_CMD];
-        cmdConfirmation.status = RxPacket[CMD_POSITION_DATA];
         break;
     }
 
@@ -614,6 +493,7 @@ static void HandleRxPacket(uint8_t * pRxBuffer)
         }
         break;
     }
+
 
     case ProteusIII_CMD_DATA_IND:
     {
@@ -945,7 +825,7 @@ ProteusIII_Disconnect()
         /* now send CMD_ARRAY */
         SendBytes(CMD_Array, CMD_ARRAY_SIZE());
 
-        /* Confirmation is sent before perfoming the disconnect. After disconnect, module sends dicsonnect indication */
+        /* Confirmation is sent before perfoming the disconnect. After disconnect, module sends disconnect indication */
         ret = Wait4CNF(CMD_WAIT_TIME, ProteusIII_CMD_DISCONNECT_CNF, CMD_Status_Success, true);
     }
     return ret;
@@ -1750,7 +1630,7 @@ bool ProteusIII_NumericCompareConfirm(bool keyIsOk)
     uint8_t lescStatus;
 
     /* If key is ok, status byte is "0x00"
-        ohterwise it's "0x01" */
+        otherwise it's "0x01" */
     if(keyIsOk)
     {
         lescStatus = 0x00;
@@ -1817,19 +1697,70 @@ bool ProteusIII_PhyUpdate(ProteusIII_Phy_t phy)
  *
  *input:
  * -configP: pointer to one or more pin configurations
- * -configLength: length of data configP points to
+ * -number_of_configs: number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIII_GPIOLocalWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uint16_t configLength)
+bool ProteusIII_GPIOLocalWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uint16_t number_of_configs)
 {
     bool ret = false;
+	uint16_t length = 0;
+
+	for (uint16_t i=0; i < number_of_configs; i++)
+	{
+		switch(configP->function)
+		{
+			case ProteusIII_GPIO_IO_Disconnected:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = 0x00;
+				length += 4;
+			}
+			break;
+			case ProteusIII_GPIO_IO_Input:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = configP->value.input;
+				length += 4;
+			}
+			break;
+			case ProteusIII_GPIO_IO_Output:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = configP->value.output;
+				length += 4;
+				}
+			break;
+			case ProteusIII_GPIO_IO_PWM:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 5;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				memcpy(&CMD_Array[CMD_POSITION_DATA + length + 3], &configP->value.pwm.period, 2);
+				CMD_Array[CMD_POSITION_DATA + length + 5] = configP->value.pwm.ratio;
+				length += 6;
+			}
+			break;
+			default:
+			{
+			}
+			break;
+		}
+
+		/* Move pointer to next element. configP is increased by sizeof(ProteusIII_GPIOConfigBlock_t)*/
+		configP++;
+	}
 
     CMD_Array[CMD_POSITION_STX] = CMD_STX;
     CMD_Array[CMD_POSITION_CMD] = ProteusIII_CMD_GPIO_LOCAL_WRITECONFIG_REQ;
-    CMD_Array[CMD_POSITION_LENGTH_LSB]= (configLength & 0x00FF);
-    CMD_Array[CMD_POSITION_LENGTH_MSB]= (configLength & 0xFF00) >> 8;
-    memcpy(&CMD_Array[CMD_POSITION_DATA], configP, configLength);
+    CMD_Array[CMD_POSITION_LENGTH_LSB]= (length & 0x00FF);
+    CMD_Array[CMD_POSITION_LENGTH_MSB]= (length & 0xFF00) >> 8;
 
     if (FillChecksum(CMD_Array, CMD_ARRAY_SIZE()))
     {
@@ -1848,11 +1779,11 @@ bool ProteusIII_GPIOLocalWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uint
  *
  *output:
  * -configP: pointer to one or more pin configurations
- * -configLengthP: length of data configP points to
+ * -number_of_configsP: pointer to number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIII_GPIOLocalReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint16_t *configLengthP)
+bool ProteusIII_GPIOLocalReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint16_t *number_of_configsP)
 {
     bool ret = false;
 
@@ -1868,9 +1799,81 @@ bool ProteusIII_GPIOLocalReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint1
 
         /* wait for cnf */
         ret = Wait4CNF(CMD_WAIT_TIME, ProteusIII_CMD_GPIO_LOCAL_READCONFIG_CNF, CMD_Status_Success, true);
-        /* config length is packetlength - 1 (status byte)*/
-        *configLengthP = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8) - 1;
-        memcpy(configP, &RxPacket[CMD_POSITION_DATA+1], *configLengthP);
+
+		if(ret == true)
+		{
+			uint16_t length = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8);
+
+			*number_of_configsP = 0;
+			uint8_t* uartP = &RxPacket[CMD_POSITION_DATA+1];
+			ProteusIII_GPIOConfigBlock_t* configP_running = configP;
+			while(uartP < &RxPacket[CMD_POSITION_DATA+length])
+			{
+				switch(*(uartP + 2))
+				{
+					case ProteusIII_GPIO_IO_Disconnected:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ProteusIII_GPIO_IO_Input:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							configP_running->value.input = *(uartP + 3);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ProteusIII_GPIO_IO_Output:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							configP_running->value.output = *(uartP + 3);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ProteusIII_GPIO_IO_PWM:
+					{
+						if(*uartP == 5)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							memcpy(&configP_running->value.pwm.period, (uartP + 3), 2);
+							configP_running->value.pwm.ratio = *(uartP + 5);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					default:
+					{
+
+					}
+					break;
+				}
+
+				uartP += *uartP + 1;
+			}
+		}
+
     }
 
     return ret;
@@ -1882,19 +1885,30 @@ bool ProteusIII_GPIOLocalReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint1
  *
  *input:
  * -controlP: pointer to one or more pin controls
- * -configLength: length of data configP controlP to
+ * -number_of_controls: number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIII_GPIOLocalWrite(ProteusIII_GPIOControlBlock_t* controlP, uint16_t controlLength)
+bool ProteusIII_GPIOLocalWrite(ProteusIII_GPIOControlBlock_t* controlP, uint16_t number_of_controls)
 {
     bool ret = false;
+	uint16_t length = 0;
+
+	for (uint16_t i=0; i < number_of_controls; i++)
+	{
+		CMD_Array[CMD_POSITION_DATA + length] = 2;
+		CMD_Array[CMD_POSITION_DATA + length + 1] = controlP->GPIO_ID;
+		CMD_Array[CMD_POSITION_DATA + length + 2] = controlP->value.output;
+		length += 3;
+
+        /* Move pointer to next element. configP is increased by sizeof(ProteusIII_GPIOControlBlock_t)*/
+		controlP++;
+	}
 
     CMD_Array[CMD_POSITION_STX] = CMD_STX;
     CMD_Array[CMD_POSITION_CMD] = ProteusIII_CMD_GPIO_LOCAL_WRITE_REQ;
-    CMD_Array[CMD_POSITION_LENGTH_LSB]= (controlLength & 0x00FF);
-    CMD_Array[CMD_POSITION_LENGTH_MSB]= (controlLength & 0xFF00) >> 8;
-    memcpy(&CMD_Array[CMD_POSITION_DATA], controlP, controlLength);
+    CMD_Array[CMD_POSITION_LENGTH_LSB]= (length & 0x00FF);
+    CMD_Array[CMD_POSITION_LENGTH_MSB]= (length & 0xFF00) >> 8;
 
     if (FillChecksum(CMD_Array, CMD_ARRAY_SIZE()))
     {
@@ -1917,11 +1931,11 @@ bool ProteusIII_GPIOLocalWrite(ProteusIII_GPIOControlBlock_t* controlP, uint16_t
  * -amountGPIOToRead: amount of pins to read and therefore length of GPIOToRead
  *output:
  * -controlP: Pointer to controlBlock
- * -controlLengthP: length of controlP
+ * -number_of_controlsP: pointer to number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIII_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIII_GPIOControlBlock_t* controlP, uint16_t* controlLengthP)
+bool ProteusIII_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIII_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP)
 {
     bool ret = false;
 
@@ -1939,9 +1953,31 @@ bool ProteusIII_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, Pr
 
         /* wait for cnf */
         ret = Wait4CNF(CMD_WAIT_TIME, ProteusIII_CMD_GPIO_LOCAL_READ_CNF, CMD_Status_Success, true);
-        /* config length is packetlength - 1 (status byte)*/
-        *controlLengthP = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8) - 1;
-        memcpy(controlP, &RxPacket[CMD_POSITION_DATA+1], *controlLengthP);
+
+		if(ret)
+		{
+			uint16_t length = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8);
+
+			*number_of_controlsP = 0;
+			uint8_t* uartP = &RxPacket[CMD_POSITION_DATA+1];
+			ProteusIII_GPIOControlBlock_t* controlP_running = controlP;
+			while(uartP < &RxPacket[CMD_POSITION_DATA+length])
+			{
+			    /* each ControlBlock starts with length field which is currently fixed to "2" */
+				if(*uartP == 2)
+				{
+					controlP_running->GPIO_ID = *(uartP + 1);
+					controlP_running->value.output = *(uartP + 2);
+
+                    /* Move pointer to next element. configP is increased by sizeof(ProteusIII_GPIOControlBlock_t)*/
+					controlP_running++;
+					*number_of_controlsP += 1;
+				}
+
+				/* uartP points to length field of control block. So increase address by value of length + 1 */
+				uartP += *uartP + 1;
+			}
+		}
     }
 
     return ret;
@@ -1952,19 +1988,68 @@ bool ProteusIII_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, Pr
  *
  *input:
  * -configP: pointer to one or more pin configurations
- * -configLength: length of data configP points to
+ * -number_of_configs: number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIII_GPIORemoteWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uint16_t configLength)
+bool ProteusIII_GPIORemoteWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uint16_t number_of_configs)
 {
     bool ret = false;
+	uint16_t length = 0;
+
+	for (uint16_t i=0; i < number_of_configs; i++)
+	{
+		switch(configP->function)
+		{
+			case ProteusIII_GPIO_IO_Disconnected:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = 0x00;
+				length += 4;
+			}
+			break;
+			case ProteusIII_GPIO_IO_Input:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = configP->value.input;
+				length += 4;
+			}
+			break;
+			case ProteusIII_GPIO_IO_Output:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 3;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				CMD_Array[CMD_POSITION_DATA + length + 3] = configP->value.output;
+				length += 4;
+				}
+			break;
+			case ProteusIII_GPIO_IO_PWM:
+			{
+				CMD_Array[CMD_POSITION_DATA + length] = 5;
+				CMD_Array[CMD_POSITION_DATA + length + 1] = configP->GPIO_ID;
+				CMD_Array[CMD_POSITION_DATA + length + 2] = configP->function;
+				memcpy(&CMD_Array[CMD_POSITION_DATA + length + 3], &configP->value.pwm.period, 2);
+				CMD_Array[CMD_POSITION_DATA + length + 5] = configP->value.pwm.ratio;
+				length += 6;
+			}
+			break;
+			default:
+			{
+			}
+			break;
+		}
+		configP++;
+	}
 
     CMD_Array[CMD_POSITION_STX] = CMD_STX;
     CMD_Array[CMD_POSITION_CMD] = ProteusIII_CMD_GPIO_REMOTE_WRITECONFIG_REQ;
-    CMD_Array[CMD_POSITION_LENGTH_LSB]= (configLength & 0x00FF);
-    CMD_Array[CMD_POSITION_LENGTH_MSB]= (configLength & 0xFF00) >> 8;
-    memcpy(&CMD_Array[CMD_POSITION_DATA], configP, configLength);
+    CMD_Array[CMD_POSITION_LENGTH_LSB]= (length & 0x00FF);
+    CMD_Array[CMD_POSITION_LENGTH_MSB]= (length & 0xFF00) >> 8;
 
     if (FillChecksum(CMD_Array, CMD_ARRAY_SIZE()))
     {
@@ -1983,11 +2068,11 @@ bool ProteusIII_GPIORemoteWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uin
  *
  *output:
  * -configP: pointer to one or more pin configurations
- * -configLengthP: length of data configP points to
+ * -number_of_configsP: pointer to number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIII_GPIORemoteReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint16_t *configLengthP)
+bool ProteusIII_GPIORemoteReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint16_t *number_of_configsP)
 {
     bool ret = false;
 
@@ -2003,9 +2088,79 @@ bool ProteusIII_GPIORemoteReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint
 
         /* wait for cnf */
         ret = Wait4CNF(CMD_WAIT_TIME, ProteusIII_CMD_GPIO_REMOTE_READCONFIG_CNF, CMD_Status_Success, true);
-        /* config length is packetlength - 1 (status byte)*/
-        *configLengthP = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8) - 1;
-        memcpy(configP, &RxPacket[CMD_POSITION_DATA+1], *configLengthP);
+
+		if(ret == true)
+		{
+			uint16_t length = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8);
+
+			*number_of_configsP = 0;
+			uint8_t* uartP = &RxPacket[CMD_POSITION_DATA+1];
+			ProteusIII_GPIOConfigBlock_t* configP_running = configP;
+			while(uartP < &RxPacket[CMD_POSITION_DATA+length])
+			{
+				switch(*(uartP + 2))
+				{
+					case ProteusIII_GPIO_IO_Disconnected:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ProteusIII_GPIO_IO_Input:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							configP_running->value.input = *(uartP + 3);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ProteusIII_GPIO_IO_Output:
+					{
+						if(*uartP == 3)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							configP_running->value.output = *(uartP + 3);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					case ProteusIII_GPIO_IO_PWM:
+					{
+						if(*uartP == 5)
+						{
+							configP_running->GPIO_ID = *(uartP + 1);
+							configP_running->function = *(uartP + 2);
+							memcpy(&configP_running->value.pwm.period, (uartP + 3), 2);
+							configP_running->value.pwm.ratio = *(uartP + 5);
+
+							configP_running++;
+							*number_of_configsP += 1;
+						}
+					}
+					break;
+					default:
+					{
+
+					}
+					break;
+				}
+				uartP += *uartP + 1;
+			}
+		}
     }
 
     return ret;
@@ -2017,19 +2172,28 @@ bool ProteusIII_GPIORemoteReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint
  *
  *input:
  * -controlP: pointer to one or more pin controls
- * -configLength: length of data configP controlP to
+ * -number_of_controls: number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIII_GPIORemoteWrite(ProteusIII_GPIOControlBlock_t* controlP, uint16_t controlLength)
+bool ProteusIII_GPIORemoteWrite(ProteusIII_GPIOControlBlock_t* controlP, uint16_t number_of_controls)
 {
     bool ret = false;
+	uint16_t length = 0;
+
+	for (uint16_t i=0; i < number_of_controls; i++)
+	{
+		CMD_Array[CMD_POSITION_DATA + length] = 2;
+		CMD_Array[CMD_POSITION_DATA + length + 1] = controlP->GPIO_ID;
+		CMD_Array[CMD_POSITION_DATA + length + 2] = controlP->value.ratio;
+		length += 3;
+		controlP++;
+	}
 
     CMD_Array[CMD_POSITION_STX] = CMD_STX;
     CMD_Array[CMD_POSITION_CMD] = ProteusIII_CMD_GPIO_REMOTE_WRITE_REQ;
-    CMD_Array[CMD_POSITION_LENGTH_LSB]= (controlLength & 0x00FF);
-    CMD_Array[CMD_POSITION_LENGTH_MSB]= (controlLength & 0xFF00) >> 8;
-    memcpy(&CMD_Array[CMD_POSITION_DATA], controlP, controlLength);
+    CMD_Array[CMD_POSITION_LENGTH_LSB]= (length & 0x00FF);
+    CMD_Array[CMD_POSITION_LENGTH_MSB]= (length & 0xFF00) >> 8;
 
     if (FillChecksum(CMD_Array, CMD_ARRAY_SIZE()))
     {
@@ -2052,11 +2216,11 @@ bool ProteusIII_GPIORemoteWrite(ProteusIII_GPIOControlBlock_t* controlP, uint16_
  * -amountGPIOToRead: amount of pins to read and therefore length of GPIOToReadP
  *output:
  * -controlP: Pointer to controlBlock
- * -controlLengthP: length of controlP
+ * -number_of_controlsP: pointer to number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ProteusIII_GPIORemoteRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIII_GPIOControlBlock_t* controlP, uint16_t* controlLengthP)
+bool ProteusIII_GPIORemoteRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIII_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP)
 {
     bool ret = false;
 
@@ -2074,11 +2238,57 @@ bool ProteusIII_GPIORemoteRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, P
 
         /* wait for cnf */
         ret = Wait4CNF(CMD_WAIT_TIME, ProteusIII_CMD_GPIO_REMOTE_READ_CNF, CMD_Status_Success, true);
-        /* config length is packetlength - 1 (status byte)*/
-        *controlLengthP = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8) - 1;
-        memcpy(controlP, &RxPacket[CMD_POSITION_DATA+1], *controlLengthP);
+
+		if(ret)
+		{
+			uint16_t length = ((uint16_t) RxPacket[CMD_POSITION_LENGTH_LSB] << 0) + ((uint16_t) RxPacket[CMD_POSITION_LENGTH_MSB] << 8);
+
+			*number_of_controlsP = 0;
+			uint8_t* uartP = &RxPacket[CMD_POSITION_DATA+1];
+			ProteusIII_GPIOControlBlock_t* controlP_running = controlP;
+			while(uartP < &RxPacket[CMD_POSITION_DATA+length])
+			{
+				if(*uartP == 2)
+				{
+					controlP_running->GPIO_ID = *(uartP + 1);
+					controlP_running->value.ratio   = *(uartP + 2);
+
+					controlP_running++;
+					*number_of_controlsP += 1;
+				}
+				uartP += *uartP + 1;
+			}
+		}
     }
 
+    return ret;
+}
+
+/*
+ *Temporarily allow unbonded connections, in case only bonded connections have been configured
+ *
+ *return true if request succeeded
+ *       false otherwise
+ */
+bool
+ProteusIII_Allowunbondedconnections()
+{
+    bool ret = false;
+
+    /* fill CMD_ARRAY packet */
+    CMD_Array[CMD_POSITION_STX] = CMD_STX;
+    CMD_Array[CMD_POSITION_CMD] = ProteusIII_CMD_ALLOWUNBONDEDCONNECTIONS_REQ;
+    CMD_Array[CMD_POSITION_LENGTH_LSB] = (uint8_t)0;
+    CMD_Array[CMD_POSITION_LENGTH_MSB] = (uint8_t)0;
+
+    if (FillChecksum(CMD_Array, CMD_ARRAY_SIZE()))
+    {
+        /* now send CMD_ARRAY */
+        SendBytes(CMD_Array, CMD_ARRAY_SIZE());
+
+        /* wait for cnf */
+        ret = Wait4CNF(CMD_WAIT_TIME, ProteusIII_CMD_ALLOWUNBONDEDCONNECTIONS_CNF, CMD_Status_Success, true);
+    }
     return ret;
 }
 

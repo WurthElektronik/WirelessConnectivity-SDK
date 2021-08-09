@@ -325,23 +325,21 @@ static void ThyoneIPlug_test_function()
         uint32_t destAddressRemoteGPIO = 0x22222222;
 
         /* config GPIO 1 as output high*/
-        configRemoteGPIO[0].length = 0x03;
         configRemoteGPIO[0].GPIO_ID = ThyoneI_GPIO_1;
-        configRemoteGPIO[0].InputOutput = ThyoneI_GPIO_IO_Output;
-        configRemoteGPIO[0].value = ThyoneI_GPIO_Output_High;
+        configRemoteGPIO[0].function = ThyoneI_GPIO_IO_Output;
+        configRemoteGPIO[0].value.output = ThyoneI_GPIO_Output_High;
 
         /* config GPIO 2 as input pulldown*/
-        configRemoteGPIO[1].length = 0x03;
         configRemoteGPIO[1].GPIO_ID = ThyoneI_GPIO_2;
-        configRemoteGPIO[1].InputOutput = ThyoneI_GPIO_IO_Input;
-        configRemoteGPIO[1].value = ThyoneI_GPIO_Input_PullUp;
+        configRemoteGPIO[1].function = ThyoneI_GPIO_IO_Input;
+        configRemoteGPIO[1].value.input = ThyoneI_GPIO_Input_PullUp;
 
-        ret = ThyoneIPlug_GPIORemoteSetConfig(destAddressRemoteGPIO, configRemoteGPIO, 2*sizeof(ThyoneIPlug_GPIOConfigBlock_t));
+        ret = ThyoneIPlug_GPIORemoteSetConfig(destAddressRemoteGPIO, configRemoteGPIO, 2);
         Debug_out("ThyoneIPlug_GPIORemoteWriteConfig",ret);
         delay(500);
 
-        uint16_t remoteConfigLength = 0;
-        ret = ThyoneIPlug_GPIORemoteGetConfig(destAddressRemoteGPIO, configRemoteGPIO, &remoteConfigLength);
+        uint16_t number_of_configs = 0;
+        ret = ThyoneIPlug_GPIORemoteGetConfig(destAddressRemoteGPIO, configRemoteGPIO, &number_of_configs);
         Debug_out("ThyoneIPlug_GPIORemoteReadConfig",ret);
 
 
@@ -349,11 +347,10 @@ static void ThyoneIPlug_test_function()
         ThyoneIPlug_GPIOControlBlock_t controlRemoteGPIO[ThyoneIPlug_AMOUNT_GPIO_PINS];
 
         /* set GPIO 1 to low */
-        controlRemoteGPIO[0].length = 0x02;
         controlRemoteGPIO[0].GPIO_ID = ThyoneI_GPIO_1;
-        controlRemoteGPIO[0].value = ThyoneI_GPIO_Output_Low;
+        controlRemoteGPIO[0].value.output = ThyoneI_GPIO_Output_Low;
 
-        ret = ThyoneIPlug_GPIORemoteWrite(destAddressRemoteGPIO, controlRemoteGPIO, sizeof(ThyoneIPlug_GPIOControlBlock_t));
+        ret = ThyoneIPlug_GPIORemoteWrite(destAddressRemoteGPIO, controlRemoteGPIO, 1);
         Debug_out("ThyoneIPlug_GPIORemoteWrite - Set GPIO 1 to low", ret);
         delay(500);
 
@@ -361,9 +358,9 @@ static void ThyoneIPlug_test_function()
         RemoteGPIOToRead[0] = ThyoneI_GPIO_1;
         RemoteGPIOToRead[1] = ThyoneI_GPIO_2;
 
-        uint16_t readRemoteLength = 0;
+        uint16_t number_of_controls = 0;
         /* Read GPIO 1 and 2 */
-        ret = ThyoneIPlug_GPIORemoteRead(destAddressRemoteGPIO, RemoteGPIOToRead, 2, controlRemoteGPIO, &readRemoteLength);
+        ret = ThyoneIPlug_GPIORemoteRead(destAddressRemoteGPIO, RemoteGPIOToRead, 2, controlRemoteGPIO, &number_of_controls);
         Debug_out("ThyoneIPlug_GPIORemoteRead", ret);
         if(ret)
         {

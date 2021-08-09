@@ -715,13 +715,13 @@ bool ThyoneIPlug_GetModuleMode(ThyoneIPlug_OperatingMode_t *moduleModeP)
  *input:
  * -destAddress: Destination address of the remote Thyone-I device
  * -configP: pointer to one or more pin configurations
- * -configLength: length of data configP points to
+ * -number_of_configs: number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneIPlug_GPIORemoteSetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t configLength)
+bool ThyoneIPlug_GPIORemoteSetConfig(uint32_t destAddress, ThyoneIPlug_GPIOConfigBlock_t* configP, uint16_t number_of_configs)
 {
-    return ThyoneI_GPIORemoteSetConfig(destAddress, configP, configLength);
+    return ThyoneI_GPIORemoteSetConfig(destAddress, configP, number_of_configs);
 }
 
 /*
@@ -730,13 +730,13 @@ bool ThyoneIPlug_GPIORemoteSetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlo
  *output:
  * -destAddress: Destination address of the remote Thyone-I device
  * -configP: pointer to one or more pin configurations
- * -configLengthP: length of data configP points to
+ * -number_of_configsP: pointer to number of entries in configP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneIPlug_GPIORemoteGetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlock_t* configP, uint16_t *configLengthP)
+bool ThyoneIPlug_GPIORemoteGetConfig(uint32_t destAddress, ThyoneIPlug_GPIOConfigBlock_t* configP, uint16_t *number_of_configsP)
 {
-    return ThyoneI_GPIORemoteGetConfig(destAddress, configP, configLengthP);
+    return ThyoneI_GPIORemoteGetConfig(destAddress, configP, number_of_configsP);
 }
 
 /*
@@ -746,13 +746,13 @@ bool ThyoneIPlug_GPIORemoteGetConfig(uint32_t destAddress, ThyoneI_GPIOConfigBlo
  *input:
  * -destAddress: Destination address of the remote Thyone-I device
  * -controlP: pointer to one or more pin controls
- * -configLength: length of data configP controlP to
+ * -number_of_controls: number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneIPlug_GPIORemoteWrite(uint32_t destAddress, ThyoneI_GPIOControlBlock_t* controlP, uint16_t controlLength)
+bool ThyoneIPlug_GPIORemoteWrite(uint32_t destAddress, ThyoneI_GPIOControlBlock_t* controlP, uint16_t number_of_controls)
 {
-    return ThyoneI_GPIORemoteWrite(destAddress, controlP, controlLength);
+    return ThyoneI_GPIORemoteWrite(destAddress, controlP, number_of_controls);
 }
 
 /*
@@ -765,12 +765,12 @@ bool ThyoneIPlug_GPIORemoteWrite(uint32_t destAddress, ThyoneI_GPIOControlBlock_
  * -amountGPIOToRead: amount of pins to read and therefore length of GPIOToReadP
  *output:
  * -controlP: Pointer to controlBlock
- * -controlLengthP: length of controlP
+ * -number_of_controlsP: pointer to number of entries in controlP array
  *return true if request succeeded
  *       false otherwise
  */
-bool ThyoneIPlug_GPIORemoteRead(uint32_t destAddress, uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* controlLengthP)
+bool ThyoneIPlug_GPIORemoteRead(uint32_t destAddress, uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ThyoneI_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP)
 {
-    return ThyoneI_GPIORemoteRead(destAddress, GPIOToReadP, amountGPIOToRead, controlP, controlLengthP);
+    return ThyoneI_GPIORemoteRead(destAddress, GPIOToReadP, amountGPIOToRead, controlP, number_of_controlsP);
 }
 

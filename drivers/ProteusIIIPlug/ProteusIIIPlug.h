@@ -97,15 +97,10 @@ extern bool ProteusIIIPlug_PhyUpdate(ProteusIIIPlug_Phy_t phy);
 extern ProteusIIIPlug_States_t ProteusIIIPlug_GetDriverState();
 
 /* functions to control the GPIO feature */
-extern bool ProteusIIIPlug_GPIOLocalWriteConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t configLength);
-extern bool ProteusIIIPlug_GPIOLocalReadConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t* configLengthP);
-extern bool ProteusIIIPlug_GPIOLocalWrite(ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t controlLength);
-extern bool ProteusIIIPlug_GPIOLocalRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t* controlLengthP);
-
-extern bool ProteusIIIPlug_GPIORemoteWriteConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t configLength);
-extern bool ProteusIIIPlug_GPIORemoteReadConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t* configLengthP);
-extern bool ProteusIIIPlug_GPIORemoteWrite(ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t controlLength);
-extern bool ProteusIIIPlug_GPIORemoteRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t* controlLengthP);
+extern bool ProteusIIIPlug_GPIORemoteWriteConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t number_of_configs);
+extern bool ProteusIIIPlug_GPIORemoteReadConfig(ProteusIIIPlug_GPIOConfigBlock_t* configP, uint16_t* number_of_configsP);
+extern bool ProteusIIIPlug_GPIORemoteWrite(ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t number_of_controls);
+extern bool ProteusIIIPlug_GPIORemoteRead(uint8_t *GPIOToReadP, uint8_t amountGPIOToRead, ProteusIIIPlug_GPIOControlBlock_t* controlP, uint16_t* number_of_controlsP);
 
 /* functions that write the non-volatile settings in the flash,
  * after modification of any non-volatile setting, the module must be reset such that the update takes effect
