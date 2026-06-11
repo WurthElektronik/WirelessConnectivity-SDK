@@ -29,6 +29,7 @@
  */
 
 #include <ProteusIV/ProteusIV.h>
+#include <ProteusIV/ProteusIV_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
@@ -69,21 +70,27 @@ static bool displayPasskeyRequestReceived = false;
 /* Conn_ID that requested authentication */
 static uint8_t authentication_conn_ID = 0;
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static ProteusIV_Pins_t ProteusIV_pins = {
-    .ProteusIV_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .ProteusIV_Pin_Mode0 = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .ProteusIV_Pin_Mode1 = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
-    .ProteusIV_Pin_Led1 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_9)),
-    .ProteusIV_UART_Enable = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_0)),
+ProteusIV_Pins_t ProteusIV_pins = {
+    .ProteusIV_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .ProteusIV_Pin_Mode0 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
+    .ProteusIV_Pin_Mode1 = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
+    .ProteusIV_Pin_Led1 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
+    .ProteusIV_UART_Enable = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t ProteusIV_uart;
+WE_UART_t ProteusIV_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief The application's main function.
@@ -93,9 +100,6 @@ void ProteusIV_Examples(void)
     ProteusIV_uart.baudrate = PROTEUSIV_DEFAULT_BAUDRATE;
     ProteusIV_uart.flowControl = WE_FlowControl_RTSAndCTS;
     ProteusIV_uart.parity = WE_Parity_None;
-    ProteusIV_uart.uartInit = WE_UART1_Init;
-    ProteusIV_uart.uartDeinit = WE_UART1_DeInit;
-    ProteusIV_uart.uartTransmit = WE_UART1_Transmit;
 
     //Peripheral_CommandMode_Example();
     //Central_CommandMode_Example();
@@ -187,14 +191,14 @@ static void Peripheral_CommandMode_Example()
                 link_open = true;
                 ret = ProteusIV_Transmit(conn_ID, data, MIN(sizeof(data), ProteusIV_connection_list[conn_ID].max_payload));
                 Examples_Print("ProteusIV_Transmit", ret);
-                WE_APP_PRINT("-> to Connection ID %d", conn_ID);
+                WE_APP_PRINT("-> to Connection ID %d\r\n", conn_ID);
                 WE_Delay(500);
             }
         }
 
         if (!link_open)
         {
-            WE_APP_PRINT("Waiting for link to open");
+            WE_APP_PRINT("Waiting for link to open\r\n");
             WE_Delay(2000);
         }
     }
@@ -252,7 +256,7 @@ static void Central_CommandMode_Example()
                 connect = false;
                 ret = ProteusIV_Transmit(conn_ID, data, MIN(sizeof(data), ProteusIV_connection_list[conn_ID].max_payload));
                 Examples_Print("ProteusIV_Transmit", ret);
-                WE_APP_PRINT("-> to Connection ID %d", conn_ID);
+                WE_APP_PRINT("-> to Connection ID %d\r\n", conn_ID);
                 WE_Delay(500);
             }
         }
@@ -900,7 +904,7 @@ bool ConfigureModule()
         WE_APP_PRINT("Failed to read ETX\r\n");
         return false;
     }
-    WE_APP_PRINT("The ETX is %04x", etx);
+    WE_APP_PRINT("The ETX is %04x\r\n", etx);
 
     /* add/run your configuration commands here */
 
@@ -982,7 +986,7 @@ static void DisplayPasskeyCallback(uint8_t conn_ID, ProteusIV_DisplayPasskeyActi
         /* Handle display pass key request asynchronously in main (must not send response directly from callback) */
         authentication_conn_ID = conn_ID;
         displayPasskeyRequestReceived = true;
-        WE_APP_PRINT("Please confirm");
+        WE_APP_PRINT("Please confirm\r\n");
     }
 }
 

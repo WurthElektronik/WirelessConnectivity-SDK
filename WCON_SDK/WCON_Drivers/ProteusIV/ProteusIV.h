@@ -389,18 +389,14 @@ typedef struct ProteusIV_SecurityState_t
 /**
  * @brief Module connection state structure
  */
-typedef union ProteusIV_ConnectionState_t
+typedef struct ProteusIV_ConnectionState_t
 {
-    uint8_t raw;
-    struct
-    {
-        uint8_t advertising : 1;
-        uint8_t scanning : 1;
-        uint8_t connected : 1;
-        uint8_t peripheral_link_open : 1;
-        uint8_t central_link_open : 1;
-        uint8_t reserved : 3;
-    } flags;
+    uint8_t advertising : 1;
+    uint8_t scanning : 1;
+    uint8_t connected : 1;
+    uint8_t peripheral_link_open : 1;
+    uint8_t central_link_open : 1;
+    uint8_t reserved : 3;
 } ProteusIV_ConnectionState_t;
 
 /**
@@ -1091,6 +1087,8 @@ extern bool ProteusIV_GetMAC(uint8_t* macP);
 
 /**
  * @brief Request the 6 digit Bluetooth MAC.
+ *
+ * @details In case the MAC is still default, it is created by reading the module's serial number
  *
  * @param[out] btMacP: Pointer to the Bluetooth MAC
  *

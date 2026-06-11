@@ -37,18 +37,24 @@
 #include <global_platform.h>
 #include <stdio.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the control pins
  */
 AdrasteaI_Pins_t AdrasteaI_pins = {
-    .AdrasteaI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .AdrasteaI_Pin_WakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+    .AdrasteaI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .AdrasteaI_Pin_WakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
 };
 
 /**
  * @brief Definition of the uart
  */
-WE_UART_t AdrasteaI_uart;
+WE_UART_t AdrasteaI_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief Runs Adrastea examples.
@@ -60,9 +66,6 @@ void AdrasteaI_Examples()
     AdrasteaI_uart.baudrate = 115200;
     AdrasteaI_uart.flowControl = WE_FlowControl_NoFlowControl;
     AdrasteaI_uart.parity = WE_Parity_None;
-    AdrasteaI_uart.uartInit = WE_UART1_Init;
-    AdrasteaI_uart.uartDeinit = WE_UART1_DeInit;
-    AdrasteaI_uart.uartTransmit = WE_UART1_Transmit;
 
     ATDeviceExample();
     //    ATGNSSExample();

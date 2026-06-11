@@ -102,13 +102,15 @@ void WE_Print_Init()
     LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA);
     uint32_t alternateFunction = LL_GPIO_AF_4;
 
-#elif defined(STM32F401xE)
+#elif defined(STM32F401xE) || defined(STM32F446xx)
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
     uint32_t alternateFunction = LL_GPIO_AF_7;
 
 #elif defined(STM32L432xx)
     LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
     uint32_t alternateFunction = LL_GPIO_AF_7;
+#else
+#error "Error: No chipset selected"
 #endif
 
     /* USART2 GPIO Configuration

@@ -29,6 +29,7 @@
  */
 
 #include <ProteusIII/ProteusIII.h>
+#include <ProteusIII/ProteusIII_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
@@ -63,22 +64,28 @@ static bool passkeyRequestReceived = false;
 /* Is set to true when a display passkey indication has been received. */
 static bool displayPasskeyRequestReceived = false;
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static ProteusIII_Pins_t ProteusIII_pins = {
-    .ProteusIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .ProteusIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+ProteusIII_Pins_t ProteusIII_pins = {
+    .ProteusIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .ProteusIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .ProteusIII_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .ProteusIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
-    .ProteusIII_Pin_Busy = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_8)),
-    .ProteusIII_Pin_StatusLed2 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_9)),
+    .ProteusIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
+    .ProteusIII_Pin_Busy = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+    .ProteusIII_Pin_StatusLed2 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_1)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t ProteusIII_uart;
+WE_UART_t ProteusIII_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief The application's main function.
@@ -89,9 +96,6 @@ void ProteusIII_Examples(void)
     ProteusIII_uart.baudrate = PROTEUSIII_DEFAULT_BAUDRATE;
     ProteusIII_uart.flowControl = WE_FlowControl_NoFlowControl;
     ProteusIII_uart.parity = WE_Parity_None;
-    ProteusIII_uart.uartInit = WE_UART1_Init;
-    ProteusIII_uart.uartDeinit = WE_UART1_DeInit;
-    ProteusIII_uart.uartTransmit = WE_UART1_Transmit;
 
     CommandModeExample();
     //    PeripheralOnlyModeExample();
@@ -523,8 +527,7 @@ static void SecurityCallback(uint8_t* btMac, ProteusIII_SecurityState_t security
  */
 static void PasskeyCallback(uint8_t* btMac)
 {
-    WE_APP_PRINT("Pass key request from device with BTMAC (0x%02x%02x%02x%02x%02x%02x) ", btMac[0], btMac[1], btMac[2], btMac[3], btMac[4], btMac[5]);
-    WE_APP_PRINT("\r\n");
+    WE_APP_PRINT("Pass key request from device with BTMAC (0x%02x%02x%02x%02x%02x%02x) \r\n", btMac[0], btMac[1], btMac[2], btMac[3], btMac[4], btMac[5]);
 
     /* Handle pass key request asynchronously in main (must not send response directly from callback) */
     passkeyRequestReceived = true;
@@ -536,8 +539,7 @@ static void PasskeyCallback(uint8_t* btMac)
 static void DisplayPasskeyCallback(ProteusIII_DisplayPasskeyAction_t action, uint8_t* btMac, uint8_t* passkey)
 {
     WE_APP_PRINT("Pass key request from device with BTMAC (0x%02x%02x%02x%02x%02x%02x) ", btMac[0], btMac[1], btMac[2], btMac[3], btMac[4], btMac[5]);
-    WE_APP_PRINT("and pass key (%c%c%c%c%c%c) ", passkey[0], passkey[1], passkey[2], passkey[3], passkey[4], passkey[5]);
-    WE_APP_PRINT("\r\n");
+    WE_APP_PRINT("and pass key (%c%c%c%c%c%c) \r\n", passkey[0], passkey[1], passkey[2], passkey[3], passkey[4], passkey[5]);
 
     if (ProteusIII_DisplayPasskeyAction_PleaseConfirm == action)
     {
@@ -572,13 +574,12 @@ static void PhyUpdateCallback(bool success, uint8_t* btMac, uint8_t phyRx, uint8
 {
     if (success)
     {
-        WE_APP_PRINT("Phy of connection to BTMAC (0x%02x%02x%02x%02x%02x%02x) updated (RX: %dMBit, TX: %dMBit)", btMac[0], btMac[1], btMac[2], btMac[3], btMac[4], btMac[5], phyRx, phyTx);
+        WE_APP_PRINT("Phy of connection to BTMAC (0x%02x%02x%02x%02x%02x%02x) updated (RX: %dMBit, TX: %dMBit)\r\n", btMac[0], btMac[1], btMac[2], btMac[3], btMac[4], btMac[5], phyRx, phyTx);
     }
     else
     {
-        WE_APP_PRINT("Failed to update Phy connection");
+        WE_APP_PRINT("Failed to update Phy connection\r\n");
     }
-    WE_APP_PRINT("\r\n");
 }
 
 /**

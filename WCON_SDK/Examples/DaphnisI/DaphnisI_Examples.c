@@ -38,19 +38,26 @@
 #include <global/global.h>
 #include <global_platform.h>
 #include <stdio.h>
+
+#ifdef WE_PLATFORM_STM32
 /**
  * @brief Definition of the control pins
  */
 DaphnisI_Pins_t DaphnisI_pins = {
-    .DaphnisI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .DaphnisI_Pin_WakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_5)),
+    .DaphnisI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .DaphnisI_Pin_WakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .DaphnisI_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
 };
 
 /**
  * @brief Definition of the uart
  */
-WE_UART_t DaphnisI_uart;
+WE_UART_t DaphnisI_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief The application's main function.
@@ -61,9 +68,6 @@ void DaphnisI_Examples(void)
     DaphnisI_uart.baudrate = DAPHNISI_DEFAULT_BAUDRATE;
     DaphnisI_uart.flowControl = WE_FlowControl_NoFlowControl;
     DaphnisI_uart.parity = WE_Parity_None;
-    DaphnisI_uart.uartInit = WE_UART1_Init;
-    DaphnisI_uart.uartDeinit = WE_UART1_DeInit;
-    DaphnisI_uart.uartTransmit = WE_UART1_Transmit;
 
     //    DaphnisI_Read_Serial_Number_Example();
     //    DaphnisI_Local_GPIO_Example();
@@ -117,7 +121,7 @@ bool DaphnisI_Apply_Settings(DaphnisI_Setting_Status_t settings_statuses)
 
     if ((settings_statuses & DaphnisI_Setting_Status_Modified) == DaphnisI_Setting_Status_Modified)
     {
-        if (!DaphnisI_PinReset())
+        if (!(IS_WE_PIN_UNDEFINED(DaphnisI_pins.DaphnisI_Pin_Reset) ? DaphnisI_Reset() : DaphnisI_PinReset()))
         {
             WE_APP_PRINT("Failed to reset module.\r\n");
             return false;

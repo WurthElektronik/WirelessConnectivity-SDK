@@ -28,26 +28,33 @@
  * @brief Themisto-I example.
  */
 #include <ThemistoI/ThemistoI.h>
+#include <ThemistoI/ThemistoI_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static ThemistoI_Pins_t ThemistoI_pins = {
-    .ThemistoI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .ThemistoI_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+ThemistoI_Pins_t ThemistoI_pins = {
+    .ThemistoI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .ThemistoI_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .ThemistoI_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .ThemistoI_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+    .ThemistoI_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t ThemistoI_uart;
+WE_UART_t ThemistoI_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /* Pick the example to be executed in the main function. */
 static void CommandModeExample();
@@ -89,9 +96,6 @@ void ThemistoI_Examples(void)
     ThemistoI_uart.baudrate = THEMISTOI_DEFAULT_BAUDRATE;
     ThemistoI_uart.flowControl = WE_FlowControl_NoFlowControl;
     ThemistoI_uart.parity = WE_Parity_None;
-    ThemistoI_uart.uartInit = WE_UART1_Init;
-    ThemistoI_uart.uartDeinit = WE_UART1_DeInit;
-    ThemistoI_uart.uartTransmit = WE_UART1_Transmit;
 
     CommandModeExample();
 }

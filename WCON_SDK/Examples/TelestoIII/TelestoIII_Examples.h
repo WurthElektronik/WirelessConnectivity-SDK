@@ -33,10 +33,15 @@
 #ifndef TELESTOIII_EXAMPLES_H_INCLUDED
 #define TELESTOIII_EXAMPLES_H_INCLUDED
 
+#include <TelestoIII/TelestoIII.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern TelestoIII_Pins_t TelestoIII_pins;
+extern WE_UART_t TelestoIII_uart;
 
 extern void TelestoIII_Examples(void);
 

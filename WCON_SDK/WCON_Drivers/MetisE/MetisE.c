@@ -29,6 +29,7 @@
  */
 
 #include <MetisE/MetisE.h>
+#include <global/endian_utils.h>
 #include <global/global.h>
 #include <stdio.h>
 #include <string.h>
@@ -193,6 +194,36 @@ static void (*RxCallback)(MetisE_ReceivedData_t);    /* callback function */
 /**************************************
  *         Static functions           *
  **************************************/
+/**
+ * @brief Fills the checksum and transmits the command over UART.
+ *
+ * @param[in] commandP: Pointer to the command frame.
+ *
+ * @return true if transmission succeeded,
+ *         false otherwise
+ */
+static bool MetisE_Command_Transmit(MetisE_CMD_Frame_t* commandP)
+{
+    if ((commandP == NULL))
+    {
+        return false;
+    }
+
+    uint16_t command_length = commandP->Length;
+
+    commandP->Length = host_to_le16(command_length);
+
+    uint8_t checksum = (uint8_t)commandP->Stx;
+    uint8_t* pArray = (uint8_t*)commandP;
+    for (uint16_t i = 1; i < (command_length + LENGTH_CMD_OVERHEAD_WITHOUT_CRC); i++)
+    {
+        checksum ^= pArray[i];
+    }
+    commandP->Data[command_length] = checksum;
+
+    return MetisE_uartP->uartTransmit((uint8_t*)commandP, command_length + LENGTH_CMD_OVERHEAD);
+}
+
 void MetisE_GetOptionPointer(MetisE_CMD_Frame_t* pCmdFrame, MetisE_Options_t option, MetisE_CMD_Option_t* pOptionOut)
 {
     uint8_t* currentOption = pCmdFrame->Data;
@@ -351,19 +382,6 @@ static bool Wait4CNF(uint32_t max_time_ms, uint8_t expectedCmdConfirmation, Meti
     return false;
 }
 
-static void FillChecksum(MetisE_CMD_Frame_t* cmd)
-{
-    uint8_t checksum = (uint8_t)cmd->Stx;
-    uint8_t* pArray = (uint8_t*)cmd;
-
-    for (uint8_t i = 1; i < (cmd->Length + LENGTH_CMD_OVERHEAD_WITHOUT_CRC); i++)
-    {
-        checksum ^= pArray[i];
-    }
-
-    cmd->Data[cmd->Length] = checksum;
-}
-
 void MetisE_HandleRxByte(uint8_t* dataP, size_t size)
 {
     for (; size > 0; size--, dataP++)
@@ -428,16 +446,6 @@ void MetisE_HandleRxByte(uint8_t* dataP, size_t size)
                 break;
         }
     }
-}
-
-bool MetisE_Transparent_Transmit(const uint8_t* data, uint16_t dataLength)
-{
-    if ((data == NULL) || (dataLength == 0))
-    {
-        return false;
-    }
-
-    return MetisE_uartP->uartTransmit((uint8_t*)data, dataLength);
 }
 
 bool MetisE_Init(WE_UART_t* uartP, MetisE_Pins_t* pinoutP, void (*RXcb)(MetisE_ReceivedData_t))
@@ -543,9 +551,7 @@ bool MetisE_Reset()
     txPacket.Cmd = METIS_E_CMD_RESET_REQ;
     txPacket.Length = 0x00;
 
-    FillChecksum(&txPacket);
-
-    if (!MetisE_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!MetisE_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -559,9 +565,7 @@ bool MetisE_FactoryReset()
     txPacket.Cmd = METIS_E_CMD_FACTORY_RESET_REQ;
     txPacket.Length = 0x00;
 
-    FillChecksum(&txPacket);
-
-    if (!MetisE_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!MetisE_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -576,9 +580,7 @@ bool MetisE_Standby()
     txPacket.Cmd = METIS_E_CMD_STANDBY_REQ;
     txPacket.Length = 0x00;
 
-    FillChecksum(&txPacket);
-
-    if (!MetisE_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!MetisE_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -593,9 +595,7 @@ bool MetisE_Shutdown()
     txPacket.Cmd = METIS_E_CMD_SHUTDOWN_REQ;
     txPacket.Length = 0x00;
 
-    FillChecksum(&txPacket);
-
-    if (!MetisE_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!MetisE_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -617,9 +617,7 @@ static bool MetisE_GetSetting(MetisE_UserSettings_t us, bool getDefault, uint8_t
     txPacket.Data[1] = 1;
     txPacket.Data[2] = us;
 
-    FillChecksum(&txPacket);
-
-    if (!MetisE_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!MetisE_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -690,16 +688,13 @@ static bool MetisE_SetSetting(MetisE_UserSettings_t us, bool setDefault, uint8_t
     txPacket.Data[1] = length;
     memcpy(&txPacket.Data[2], valueP, length);
 
-    FillChecksum(&txPacket);
-
-    if (!MetisE_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!MetisE_Command_Transmit(&txPacket))
     {
         return false;
     }
 
     /* wait for cnf */
     return Wait4CNF(CMD_WAIT_TIME, setDefault ? METIS_E_CMD_SET_CNF : METIS_E_CMD_SET_RAM_CNF, CMD_Status_Success, true);
-    ;
 }
 
 bool MetisE_SetDefault(MetisE_UserSettings_t us, uint8_t* valueP, uint8_t length) { return MetisE_SetSetting(us, true, valueP, length); }
@@ -712,7 +707,7 @@ bool MetisE_GetFirmwareVersion(uint8_t* fwP)
     }
 
     uint8_t help[3];
-    uint8_t help_length;
+    uint8_t help_length = sizeof(help);
 
     if (!MetisE_GetDefault(MetisE_USERSETTING_FWVERSION, help, &help_length))
     {
@@ -734,7 +729,7 @@ bool MetisE_GetSerialNumber(uint8_t* snP)
     }
 
     uint8_t help[8];
-    uint8_t help_length;
+    uint8_t help_length = sizeof(help);
 
     if (!MetisE_GetDefault(MetisE_USERSETTING_FACTORYSETTINGS, help, &help_length))
     {
@@ -770,9 +765,17 @@ bool MetisE_GetDefault_wmBusRxMode(MetisE_wmBusMode_t* wmbusRxModeP)
     }
 
     *wmbusRxModeP = MetisE_wmBusMode_Undefined;
+    uint8_t wmBus_rx_mode;
     uint8_t length = 1;
 
-    return MetisE_GetDefault(MetisE_USERSETTING_WMBUS_RXMODE, (uint8_t*)wmbusRxModeP, &length);
+    if (!MetisE_GetDefault(MetisE_USERSETTING_WMBUS_RXMODE, &wmBus_rx_mode, &length))
+    {
+        return false;
+    }
+
+    *wmbusRxModeP = wmBus_rx_mode;
+
+    return true;
 }
 
 bool MetisE_GetDefault_wmBusRole(MetisE_wmBusRole_t* wmbusRoleP)
@@ -783,9 +786,17 @@ bool MetisE_GetDefault_wmBusRole(MetisE_wmBusRole_t* wmbusRoleP)
     }
 
     *wmbusRoleP = MetisE_wmBusRole_Undefined;
+    uint8_t wmBus_rx_role;
     uint8_t length = 1;
 
-    return MetisE_GetDefault(MetisE_USERSETTING_WMBUS_ROLE, (uint8_t*)wmbusRoleP, &length);
+    if (!MetisE_GetDefault(MetisE_USERSETTING_WMBUS_ROLE, &wmBus_rx_role, &length))
+    {
+        return false;
+    }
+
+    *wmbusRoleP = wmBus_rx_role;
+
+    return true;
 }
 
 bool MetisE_GetDefault_CFGFlags(uint8_t* cfgFlagsP)
@@ -822,7 +833,9 @@ bool MetisE_SetDefault_wmBusRxMode(MetisE_wmBusMode_t wmbusRxMode)
         return false;
     }
 
-    return MetisE_SetDefault(MetisE_USERSETTING_WMBUS_RXMODE, (uint8_t*)&wmbusRxMode, 1);
+    uint8_t wmBus_rx_mode = wmbusRxMode;
+
+    return MetisE_SetDefault(MetisE_USERSETTING_WMBUS_RXMODE, &wmBus_rx_mode, 1);
 }
 
 bool MetisE_SetDefault_wmBusRole(MetisE_wmBusRole_t wmbusRxRole)
@@ -834,7 +847,9 @@ bool MetisE_SetDefault_wmBusRole(MetisE_wmBusRole_t wmbusRxRole)
         return false;
     }
 
-    return MetisE_SetDefault(MetisE_USERSETTING_WMBUS_ROLE, (uint8_t*)&wmbusRxRole, 1);
+    uint8_t wmBus_rx_role = wmbusRxRole;
+
+    return MetisE_SetDefault(MetisE_USERSETTING_WMBUS_ROLE, &wmBus_rx_role, 1);
 }
 
 bool MetisE_SetDefault_CFGFlags(uint8_t cfgFlags)
@@ -870,9 +885,17 @@ bool MetisE_GetVolatile_wmBusRxMode(MetisE_wmBusMode_t* wmbusRxModeP)
     }
 
     *wmbusRxModeP = MetisE_wmBusMode_Undefined;
+    uint8_t wmBus_rx_mode;
     uint8_t length = 1;
 
-    return MetisE_GetSetting(MetisE_USERSETTING_WMBUS_RXMODE, false, (uint8_t*)wmbusRxModeP, &length);
+    if (!MetisE_GetSetting(MetisE_USERSETTING_WMBUS_RXMODE, false, &wmBus_rx_mode, &length))
+    {
+        return false;
+    }
+
+    *wmbusRxModeP = wmBus_rx_mode;
+
+    return true;
 }
 
 bool MetisE_GetVolatile_wmBusRole(MetisE_wmBusRole_t* wmbusRoleP)
@@ -883,9 +906,17 @@ bool MetisE_GetVolatile_wmBusRole(MetisE_wmBusRole_t* wmbusRoleP)
     }
 
     *wmbusRoleP = MetisE_wmBusRole_Undefined;
+    uint8_t wmBus_rx_role;
     uint8_t length = 1;
 
-    return MetisE_GetSetting(MetisE_USERSETTING_WMBUS_ROLE, false, (uint8_t*)wmbusRoleP, &length);
+    if (!MetisE_GetSetting(MetisE_USERSETTING_WMBUS_ROLE, false, &wmBus_rx_role, &length))
+    {
+        return false;
+    }
+
+    *wmbusRoleP = wmBus_rx_role;
+
+    return true;
 }
 
 bool MetisE_GetVolatile_CFGFlags(uint8_t* cfgFlagsP)
@@ -922,7 +953,9 @@ bool MetisE_SetVolatile_wmBusRxMode(MetisE_wmBusMode_t wmbusRxMode)
         return false;
     }
 
-    return MetisE_SetSetting(MetisE_USERSETTING_WMBUS_RXMODE, false, (uint8_t*)&wmbusRxMode, 1);
+    uint8_t wmBus_rx_mode = wmbusRxMode;
+
+    return MetisE_SetSetting(MetisE_USERSETTING_WMBUS_RXMODE, false, &wmBus_rx_mode, 1);
 }
 
 bool MetisE_SetVolatile_wmBusRole(MetisE_wmBusRole_t wmbusRxRole)
@@ -934,7 +967,9 @@ bool MetisE_SetVolatile_wmBusRole(MetisE_wmBusRole_t wmbusRxRole)
         return false;
     }
 
-    return MetisE_SetSetting(MetisE_USERSETTING_WMBUS_ROLE, false, (uint8_t*)&wmbusRxRole, 1);
+    uint8_t wmBus_rx_role = wmbusRxRole;
+
+    return MetisE_SetSetting(MetisE_USERSETTING_WMBUS_ROLE, false, &wmBus_rx_role, 1);
 }
 
 bool MetisE_SetVolatile_CFGFlags(uint8_t cfgFlags)
@@ -954,9 +989,7 @@ bool MetisE_ReceiveStart()
     txPacket.Cmd = METIS_E_CMD_RXSTART_REQ;
     txPacket.Length = 0x00;
 
-    FillChecksum(&txPacket);
-
-    if (!MetisE_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!MetisE_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -970,9 +1003,7 @@ bool MetisE_ReceiveStop()
     txPacket.Cmd = METIS_E_CMD_RXSTOP_REQ;
     txPacket.Length = 0x00;
 
-    FillChecksum(&txPacket);
-
-    if (!MetisE_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!MetisE_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1010,8 +1041,7 @@ bool MetisE_Transmit(MetisE_wmBusMode_t mode, MetisE_wmBusFrameFormat_t frameFor
     memcpy(&txPacket.Data[txPacket.Length], payloadP, length);
     txPacket.Length += length;
 
-    FillChecksum(&txPacket);
-    if (!MetisE_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!MetisE_Command_Transmit(&txPacket))
     {
         return false;
     }

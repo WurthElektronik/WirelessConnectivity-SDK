@@ -5,3 +5,7 @@ Release/
 .settings
 /WCON_SDK/Doc/html
 /WCON_SDK/Doc/latex
+WCON_SDK/STM32F4xx/F401RE_Debug/
+WCON_SDK/STM32F4xx/F401RE_Release/
+WCON_SDK/STM32F4xx/F446RE_Debug/
+WCON_SDK/STM32F4xx/F446RE_Release/

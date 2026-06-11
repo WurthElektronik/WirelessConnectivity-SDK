@@ -552,7 +552,7 @@ bool DaphnisI_P2P_GPIO_Remote_ParseCfgGetResponseEvent(char** pEventArguments, D
         return false;
     }
 
-    if (!ATCommand_GetNextArgumentInt(pEventArguments, &(cfgGetResponseP->command_status), ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, ATCOMMAND_ARGUMENT_DELIM))
+    if (!ATCommand_GetNextArgumentInt(pEventArguments, &(cfgGetResponseP->command_status), ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_GPIO_Command_Status_t) | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, ATCOMMAND_ARGUMENT_DELIM))
     {
         return false;
     }
@@ -616,7 +616,7 @@ bool DaphnisI_P2P_GPIO_Remote_ParseValueGetResponseEvent(char** pEventArguments,
         return false;
     }
 
-    if (!ATCommand_GetNextArgumentInt(pEventArguments, &(valueGetResponseP->command_status), ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, ATCOMMAND_ARGUMENT_DELIM))
+    if (!ATCommand_GetNextArgumentInt(pEventArguments, &(valueGetResponseP->command_status), ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_GPIO_Command_Status_t) | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, ATCOMMAND_ARGUMENT_DELIM))
     {
         return false;
     }
@@ -635,7 +635,7 @@ static bool DaphnisI_GPIO_ParseConfigBlocks(char* string, DaphnisI_GPIOConfigBlo
 
     for (uint8_t i = 0; i < *configBlocksCountP; i++)
     {
-        if (!ATCommand_GetNextArgumentInt(&string, &configBlocksP[i].GPIO_ID, ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, GPIO_PIN_DELIMITER))
+        if (!ATCommand_GetNextArgumentInt(&string, &configBlocksP[i].GPIO_ID, ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_GPIO_t) | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, GPIO_PIN_DELIMITER))
         {
             return false;
         }
@@ -654,7 +654,7 @@ static bool DaphnisI_GPIO_ParseConfigBlocks(char* string, DaphnisI_GPIOConfigBlo
             }
             case DaphnisI_GPIO_IO_Input:
             {
-                if (!ATCommand_GetNextArgumentInt(&string, &(configBlocksP[i].value.input), ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, value_delimiter))
+                if (!ATCommand_GetNextArgumentInt(&string, &(configBlocksP[i].value.input), ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_GPIO_Input_t) | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, value_delimiter))
                 {
                     return false;
                 }
@@ -663,7 +663,7 @@ static bool DaphnisI_GPIO_ParseConfigBlocks(char* string, DaphnisI_GPIOConfigBlo
             }
             case DaphnisI_GPIO_IO_Output:
             {
-                if (!ATCommand_GetNextArgumentInt(&string, &(configBlocksP[i].value.output), ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, value_delimiter))
+                if (!ATCommand_GetNextArgumentInt(&string, &(configBlocksP[i].value.output), ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_GPIO_Output_t) | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, value_delimiter))
                 {
                     return false;
                 }
@@ -691,7 +691,7 @@ static bool DaphnisI_GPIO_ParseValueGetBlocks(char* string, DaphnisI_GPIOValueGe
 
     for (uint8_t i = 0; i < *valueGetBlocksCountP; i++)
     {
-        if (!ATCommand_GetNextArgumentInt(&string, &valueGetBlocksP[i].GPIO_ID, ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, GPIO_PIN_DELIMITER))
+        if (!ATCommand_GetNextArgumentInt(&string, &valueGetBlocksP[i].GPIO_ID, ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_GPIO_t) | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, GPIO_PIN_DELIMITER))
         {
             return false;
         }
@@ -700,7 +700,7 @@ static bool DaphnisI_GPIO_ParseValueGetBlocks(char* string, DaphnisI_GPIOValueGe
 
         string += 2;
 
-        if (!ATCommand_GetNextArgumentInt(&string, &(valueGetBlocksP[i].value), ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, (i == (*valueGetBlocksCountP - 1)) ? ATCOMMAND_STRING_TERMINATE : ATCOMMAND_ARGUMENT_DELIM))
+        if (!ATCommand_GetNextArgumentInt(&string, &(valueGetBlocksP[i].value), ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_GPIO_Output_t) | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, (i == (*valueGetBlocksCountP - 1)) ? ATCOMMAND_STRING_TERMINATE : ATCOMMAND_ARGUMENT_DELIM))
         {
             return false;
         }
@@ -721,12 +721,12 @@ static bool DaphnisI_GPIO_ParseStatusBlocks(char* string, DaphnisI_GPIOStatusBlo
     for (uint8_t i = 0; i < *statusBlocksCountP; i++)
     {
 
-        if (!ATCommand_GetNextArgumentInt(&string, &(statusBlocksP[i].GPIO_ID), ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, GPIO_PIN_DELIMITER))
+        if (!ATCommand_GetNextArgumentInt(&string, &(statusBlocksP[i].GPIO_ID), ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_GPIO_t) | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, GPIO_PIN_DELIMITER))
         {
             return false;
         }
 
-        if (!ATCommand_GetNextArgumentInt(&string, &(statusBlocksP[i].status), ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, (i == (*statusBlocksCountP - 1)) ? ATCOMMAND_STRING_TERMINATE : ATCOMMAND_ARGUMENT_DELIM))
+        if (!ATCommand_GetNextArgumentInt(&string, &(statusBlocksP[i].status), ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_GPIO_Block_Status_t) | ATCOMMAND_INTFLAGS_UNSIGNED | ATCOMMAND_INTFLAGS_NOTATION_DEC, (i == (*statusBlocksCountP - 1)) ? ATCOMMAND_STRING_TERMINATE : ATCOMMAND_ARGUMENT_DELIM))
         {
             return false;
         }

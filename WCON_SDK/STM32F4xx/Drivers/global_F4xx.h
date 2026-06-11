@@ -31,7 +31,7 @@
 #ifndef GLOBAL_F4XX_H_INCLUDED
 #define GLOBAL_F4XX_H_INCLUDED
 
-#ifdef STM32F401xE
+#if defined(STM32F401xE) || defined(STM32F446xx)
 
 #include <stdbool.h>
 
@@ -97,10 +97,37 @@ extern bool WE_UART6_DeInit();
  */
 extern bool WE_UART6_Transmit(const uint8_t* data, uint16_t length);
 
+#ifdef STM32F446xx
+
+/**
+ * @brief Initialize and start the UART.
+ *
+ * @param[in] baudrate Baud rate of the serial interface
+ * @param[in] flowControl Enable/disable flow control
+ * @param[in] parity Parity bit configuration
+ * @param[in] rxByteHandlerP Pointer to the handle rx byte function inside the driver. (this function should be called by the ISR for uart on data reception)
+ */
+extern bool WE_UART3_Init(uint32_t baudrate, WE_FlowControl_t flowControl, WE_Parity_t parity, WE_UART_HandleRxByte_t* rxByteHandlerP);
+
+/**
+ * @brief Deinitialize and stop the UART.
+ */
+extern bool WE_UART3_DeInit();
+
+/**
+ * @brief Transmit data via UART.
+ *
+ * @param[in] data Pointer to data buffer (data to be sent)
+ * @param[in] length Number of bytes to be sent
+ */
+extern bool WE_UART3_Transmit(const uint8_t* data, uint16_t length);
+
+#endif /* STM32F446xx */
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* STM32F401xE */
+#endif /* STM32F401xE || STM32F446xx */
 
 #endif /* GLOBAL_F4XX_H_INCLUDED */

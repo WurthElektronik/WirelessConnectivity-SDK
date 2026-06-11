@@ -490,7 +490,7 @@ void StephanoI_BluetoothLE_Central_ThroughputData_Example()
         if (StephanoI_Examples_Connection.conn_index == BLE_CONNECTION_INDEX_INVALID)
         {
             /* no connection open */
-            StephanoI_Examples_Print("Waiting for connection setup", true);
+            StephanoI_Examples_Print("Waiting for connection setup\r\n", true);
             ret = StephanoI_ATBluetoothLE_CentralConnect(0, target_remote_address, true, 3);
             StephanoI_Examples_Print("Connection setup", ret);
             WE_Delay(3000);
@@ -498,7 +498,7 @@ void StephanoI_BluetoothLE_Central_ThroughputData_Example()
         else if (StephanoI_Examples_Connection.channelopen == false)
         {
             /* no channel open -> thus configure connection and open channel */
-            StephanoI_Examples_Print("Waiting for channel open", true);
+            StephanoI_Examples_Print("Waiting for channel open\r\n", true);
 
             StephanoI_ATBluetoothLE_Central_ConnectionParameters_t conn_params = {.conn_index = StephanoI_Examples_Connection.conn_index, .min_interval = 6, .max_interval = 6, .latency = 0, .timeout = 400};
             ret = StephanoI_ATBluetoothLE_CentralSetConnectionParameters(conn_params);
@@ -650,7 +650,7 @@ void StephanoI_BluetoothLE_Central_Data_Example()
         else if (StephanoI_Examples_Connection.conn_index == BLE_CONNECTION_INDEX_INVALID)
         {
             /* no connection open -> open connection */
-            StephanoI_Examples_Print("Waiting for connection setup", true);
+            StephanoI_Examples_Print("Waiting for connection setup\r\n", true);
 
             central_connection_setup_ongoing = true;
             ret = StephanoI_ATBluetoothLE_CentralConnect(0, target_remote_address, true, 3);
@@ -665,7 +665,7 @@ void StephanoI_BluetoothLE_Central_Data_Example()
         else if (StephanoI_Examples_Connection.channelopen == false)
         {
             /* no channel open -> thus configure connection and open channel */
-            StephanoI_Examples_Print("Waiting for channel open", true);
+            StephanoI_Examples_Print("Waiting for channel open\r\n", true);
 
             StephanoI_ATBluetoothLE_Central_ConnectionParameters_t conn_params;
             uint16_t curr_interval;

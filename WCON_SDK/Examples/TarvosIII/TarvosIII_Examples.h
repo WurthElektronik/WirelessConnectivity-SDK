@@ -33,10 +33,15 @@
 #ifndef TARVOSIII_EXAMPLES_H_INCLUDED
 #define TARVOSIII_EXAMPLES_H_INCLUDED
 
+#include <TarvosIII/TarvosIII.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern TarvosIII_Pins_t TarvosIII_pins;
+extern WE_UART_t TarvosIII_uart;
 
 extern void TarvosIII_Examples(void);
 

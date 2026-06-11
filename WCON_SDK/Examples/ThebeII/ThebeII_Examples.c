@@ -29,26 +29,33 @@
  */
 
 #include <ThebeII/ThebeII.h>
+#include <ThebeII/ThebeII_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static ThebeII_Pins_t ThebeII_pins = {
-    .ThebeII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .ThebeII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+ThebeII_Pins_t ThebeII_pins = {
+    .ThebeII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .ThebeII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .ThebeII_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .ThebeII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+    .ThebeII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t ThebeII_uart;
+WE_UART_t ThebeII_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /* Pick the example to be executed in the main function. */
 static void CommandModeExample();
@@ -90,9 +97,6 @@ void ThebeII_Examples(void)
     ThebeII_uart.baudrate = THEBEII_DEFAULT_BAUDRATE;
     ThebeII_uart.flowControl = WE_FlowControl_NoFlowControl;
     ThebeII_uart.parity = WE_Parity_None;
-    ThebeII_uart.uartInit = WE_UART1_Init;
-    ThebeII_uart.uartDeinit = WE_UART1_DeInit;
-    ThebeII_uart.uartTransmit = WE_UART1_Transmit;
 
     CommandModeExample();
 }

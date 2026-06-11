@@ -400,7 +400,7 @@ bool DaphnisI_Init(WE_UART_t* uartP, DaphnisI_Pins_t* pinoutP, DaphnisI_EventCal
     DaphnisI_pinsP->DaphnisI_Pin_Boot.type = WE_Pin_Type_Output;
     DaphnisI_pinsP->DaphnisI_Pin_Boot.initial_value.output = WE_Pin_Level_Low;
     DaphnisI_pinsP->DaphnisI_Pin_WakeUp.type = WE_Pin_Type_Output;
-    DaphnisI_pinsP->DaphnisI_Pin_WakeUp.initial_value.output = WE_Pin_Level_Low;
+    DaphnisI_pinsP->DaphnisI_Pin_WakeUp.initial_value.output = WE_Pin_Level_High;
     DaphnisI_pinsP->DaphnisI_Pin_Reset.type = WE_Pin_Type_Output;
     DaphnisI_pinsP->DaphnisI_Pin_Reset.initial_value.output = WE_Pin_Level_High;
 
@@ -520,12 +520,21 @@ bool DaphnisI_PinReset(void)
 
 bool DaphnisI_PinWakeUp(void)
 {
+    if (!WE_SetPin(DaphnisI_pinsP->DaphnisI_Pin_WakeUp, WE_Pin_Level_Low))
+    {
+        return false;
+    }
+
+    WE_Delay(5);
+
     if (!WE_SetPin(DaphnisI_pinsP->DaphnisI_Pin_WakeUp, WE_Pin_Level_High))
     {
         return false;
     }
-    WE_Delay(5);
-    return WE_SetPin(DaphnisI_pinsP->DaphnisI_Pin_WakeUp, WE_Pin_Level_Low);
+
+    DaphnisI_ATEvent_t startUpEvent = DaphnisI_ATEvent_StartUp;
+
+    return (DaphnisI_WaitForEvents(DAPHNISI_STARTUP_TIME, &startUpEvent, 1, true) == DaphnisI_ATEvent_StartUp);
 }
 
 bool DaphnisI_SetPin(WE_Pin_t pin, WE_Pin_Level_t level) { return WE_SetPin(pin, level); }

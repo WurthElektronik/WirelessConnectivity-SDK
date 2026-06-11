@@ -28,25 +28,32 @@
  * @brief Thyone-e example.
  */
 #include <ThyoneE/ThyoneE.h>
+#include <ThyoneE/ThyoneE_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static ThyoneE_Pins_t ThyoneE_pins = {
-    .ThyoneE_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .ThyoneE_Pin_Busy = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_6)),
-    .ThyoneE_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+ThyoneE_Pins_t ThyoneE_pins = {
+    .ThyoneE_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .ThyoneE_Pin_Busy = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
+    .ThyoneE_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t ThyoneE_uart;
+WE_UART_t ThyoneE_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief Callback called when data has been received via radio
@@ -264,9 +271,6 @@ void ThyoneE_Examples(void)
     ThyoneE_uart.baudrate = THYONEE_DEFAULT_BAUDRATE;
     ThyoneE_uart.flowControl = WE_FlowControl_NoFlowControl;
     ThyoneE_uart.parity = WE_Parity_None;
-    ThyoneE_uart.uartInit = WE_UART1_Init;
-    ThyoneE_uart.uartDeinit = WE_UART1_DeInit;
-    ThyoneE_uart.uartTransmit = WE_UART1_Transmit;
 
     //Example_CommandMode_Throughput();
     Example_CommandMode_DataTransmission();

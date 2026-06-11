@@ -30,7 +30,7 @@
 
 #include "global_F4xx.h"
 
-#ifdef STM32F401xE
+#if defined(STM32F401xE) || defined(STM32F446xx)
 
 #include <global/global.h>
 #include <global_platform.h>
@@ -58,6 +58,16 @@ static void WE_DMA_for_UART1_Init();
 static void WE_DMA_for_UART1_DeInit();
 static void WE_UART1_CheckIfDmaDataAvailable();
 static void WE_UART1_CheckIfDmaDataAvailableAsync();
+
+#ifdef STM32F446xx
+
+static void WE_DMA_for_UART3_OnDataReceived(uint8_t* data, size_t size);
+static void WE_DMA_for_UART3_Init();
+static void WE_DMA_for_UART3_DeInit();
+static void WE_UART3_CheckIfDmaDataAvailable();
+static void WE_UART3_CheckIfDmaDataAvailableAsync();
+
+#endif /* STM32F446xx */
 
 static void WE_DMA_for_UART6_OnDataReceived(uint8_t* data, size_t size);
 static void WE_DMA_for_UART6_Init();
@@ -130,6 +140,22 @@ WE_UART_Internal_t WE_UART1_Internal = {
 #endif
 };
 
+#ifdef STM32F446xx
+
+WE_UART_Internal_t WE_UART3_Internal = {
+    .uart = NULL,
+    .flowControl = WE_FlowControl_NoFlowControl,
+    .rxByteHandlerP = NULL,
+#if defined(WE_UART_DMA)
+    .dmaRx = NULL,
+    .dmaRxStream = 0,
+    .dmaLastReadPos = 0,
+    .triggered = false,
+#endif
+};
+
+#endif /* STM32F446xx */
+
 WE_UART_Internal_t WE_UART6_Internal = {
     .uart = NULL,
     .flowControl = WE_FlowControl_NoFlowControl,
@@ -159,10 +185,10 @@ void WE_SystemClock_Config()
     RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-    RCC_OscInitStruct.PLL.PLLM = 8;
-    RCC_OscInitStruct.PLL.PLLN = 84;
-    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-    RCC_OscInitStruct.PLL.PLLQ = 4;
+    RCC_OscInitStruct.PLL.PLLM = 8;             // 16/8 = 2 MHz
+    RCC_OscInitStruct.PLL.PLLN = 84;            // 2 * 84 = 168 MHz (VCO)
+    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2; // 168/2 = 84 MHz SYSCLK
+    RCC_OscInitStruct.PLL.PLLQ = 4;             // VCO/4 = 42 MHz
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
     {
         WE_Error_Handler();
@@ -171,9 +197,9 @@ void WE_SystemClock_Config()
 	 */
     RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1; // 84 MHz
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;  // 84/2 = 42 MHz (limit for APB1)
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;  // 84 = 84 MHz (limit for APB2)
 
     if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
     {
@@ -498,6 +524,14 @@ void PendSV_Handler()
         WE_UART1_Internal.triggered = false;
         WE_UART1_CheckIfDmaDataAvailable();
     }
+
+#ifdef STM32F446xx
+    if (WE_UART3_Internal.triggered)
+    {
+        WE_UART3_Internal.triggered = false;
+        WE_UART3_CheckIfDmaDataAvailable();
+    }
+#endif /* STM32F446xx */
 
     if (WE_UART6_Internal.triggered)
     {
@@ -906,6 +940,347 @@ static void WE_DMA_for_UART6_DeInit()
 
 #endif /* defined(WE_UART_DMA) */
 
+#ifdef STM32F446xx
+
+#if defined(WE_UART_DMA)
+
+void DMA1_Stream1_IRQHandler()
+{
+    if (LL_DMA_IsEnabledIT_HT(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream) && LL_DMA_IsActiveFlag_HT1(WE_UART3_Internal.dmaRx))
+    {
+        /* DMA receive half-transfer complete */
+        LL_DMA_ClearFlag_HT1(WE_UART3_Internal.dmaRx);
+        WE_UART3_CheckIfDmaDataAvailableAsync();
+    }
+
+    if (LL_DMA_IsEnabledIT_TC(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream) && LL_DMA_IsActiveFlag_TC1(WE_UART3_Internal.dmaRx))
+    {
+        /* DMA receive transfer complete */
+        LL_DMA_ClearFlag_TC1(WE_UART3_Internal.dmaRx);
+        WE_UART3_CheckIfDmaDataAvailableAsync();
+    }
+
+    /* Other events can be implemented if required. */
+}
+
+static void WE_UART3_CheckIfDmaDataAvailableAsync()
+{
+    /* Trigger pendable service interrupt (PendSV) */
+    SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+    WE_UART3_Internal.triggered = true;
+}
+
+static void WE_UART3_CheckIfDmaDataAvailable()
+{
+    /* Get current DMA write position (in ring buffer) */
+    size_t pos = WE_DMA_RX_BUFFER_SIZE - LL_DMA_GetDataLength(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream);
+
+    /* Check if new data is available (i.e. write position has changed) */
+    if (pos != WE_UART3_Internal.dmaLastReadPos)
+    {
+        if (pos > WE_UART3_Internal.dmaLastReadPos)
+        {
+            /* Data to be read from DMA ring buffer is continuous - between lastPos and pos */
+            WE_DMA_for_UART3_OnDataReceived(&WE_UART3_Internal.WE_dmaRxBuffer[WE_UART3_Internal.dmaLastReadPos], pos - WE_UART3_Internal.dmaLastReadPos);
+        }
+        else /* pos < WE_UART3_Internal.dmaLastReadPos */
+        {
+            /* Ring buffer write position has reached the end of the buffer and restarted at the beginning.
+			 * Data is split:
+			 * - Bytes between lastPos and the end of the buffer
+			 * - Bytes between start of the buffer and pos
+			 */
+            WE_DMA_for_UART3_OnDataReceived(&WE_UART3_Internal.WE_dmaRxBuffer[WE_UART3_Internal.dmaLastReadPos], WE_DMA_RX_BUFFER_SIZE - WE_UART3_Internal.dmaLastReadPos);
+            if (pos > 0)
+            {
+                WE_DMA_for_UART3_OnDataReceived(&WE_UART3_Internal.WE_dmaRxBuffer[0], pos);
+            }
+        }
+
+        /* Store DMA write position for next interrupt */
+        WE_UART3_Internal.dmaLastReadPos = pos;
+    }
+}
+
+/**
+ * @brief Is called when one or more bytes have been received from UART via DMA.
+ * @param data Received data
+ * @param size Number of bytes received
+ */
+static void WE_DMA_for_UART3_OnDataReceived(uint8_t* data, size_t size) { (*WE_UART3_Internal.rxByteHandlerP)(data, size); }
+
+static void WE_DMA_for_UART3_Init()
+{
+    /* USART3 DMA Init */
+    WE_UART3_Internal.dmaRx = DMA1;
+    WE_UART3_Internal.dmaRxStream = LL_DMA_STREAM_1;
+    WE_UART3_Internal.dmaLastReadPos = 0;
+
+    /* DMA controller clock enable */
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+    /* DMA interrupt init */
+    /* DMA1_Stream1_IRQn interrupt configuration */
+    NVIC_SetPriority(DMA1_Stream1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), WE_PRIORITY_DMA_RX, 0));
+    NVIC_EnableIRQ(DMA1_Stream1_IRQn);
+
+    LL_DMA_SetChannelSelection(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, LL_DMA_CHANNEL_4);
+    LL_DMA_SetDataTransferDirection(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+    LL_DMA_SetStreamPriorityLevel(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, LL_DMA_PRIORITY_LOW);
+    LL_DMA_SetMode(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, LL_DMA_MODE_CIRCULAR);
+    LL_DMA_SetPeriphIncMode(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, LL_DMA_PERIPH_NOINCREMENT);
+    LL_DMA_SetMemoryIncMode(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, LL_DMA_MEMORY_INCREMENT);
+    LL_DMA_SetPeriphSize(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, LL_DMA_PDATAALIGN_BYTE);
+    LL_DMA_SetMemorySize(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, LL_DMA_MDATAALIGN_BYTE);
+    LL_DMA_DisableFifoMode(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream);
+
+    LL_DMA_SetPeriphAddress(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, (uint32_t)&USART3->DR);
+    LL_DMA_SetMemoryAddress(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, (uint32_t)WE_UART3_Internal.WE_dmaRxBuffer);
+    LL_DMA_SetDataLength(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream, WE_DMA_RX_BUFFER_SIZE);
+
+    /* Enable HT & TC interrupts */
+    LL_DMA_EnableIT_HT(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream);
+    LL_DMA_EnableIT_TC(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream);
+
+    /* Enable DMA */
+    LL_USART_EnableDMAReq_RX(WE_UART3_Internal.uart);
+    LL_USART_EnableIT_IDLE(WE_UART3_Internal.uart);
+    LL_DMA_EnableStream(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream);
+}
+
+static void WE_DMA_for_UART3_DeInit()
+{
+    if (WE_UART3_Internal.dmaRx == NULL)
+    {
+        return;
+    }
+
+    LL_DMA_DisableStream(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream);
+    LL_USART_DisableIT_IDLE(WE_UART3_Internal.uart);
+    LL_USART_DisableDMAReq_RX(WE_UART3_Internal.uart);
+    LL_DMA_DisableIT_TC(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream);
+    LL_DMA_DisableIT_HT(WE_UART3_Internal.dmaRx, WE_UART3_Internal.dmaRxStream);
+    NVIC_DisableIRQ(DMA1_Stream1_IRQn);
+    LL_AHB1_GRP1_DisableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+
+    WE_UART3_Internal.dmaRxStream = 0;
+    WE_UART3_Internal.dmaRx = NULL;
+    WE_UART3_Internal.dmaLastReadPos = 0;
+}
+
+#endif /* defined(WE_UART_DMA) */
+
+bool WE_UART3_Transmit(const uint8_t* data, uint16_t length) { return (HAL_OK == UartTransmitInternal(WE_UART3_Internal.uart, data, length)); }
+
+bool WE_UART3_Init(uint32_t baudrate, WE_FlowControl_t flowControl, WE_Parity_t parity, WE_UART_HandleRxByte_t* rxByteHandlerP)
+{
+    WE_UART3_Internal.flowControl = flowControl;
+    WE_UART3_Internal.rxByteHandlerP = rxByteHandlerP;
+
+#if defined(WE_UART_DMA)
+    /* Enable pendable service interrupt which is used for processing data received from radio module
+	 * (interrupt is triggered via WE_UART3_CheckIfDmaDataAvailableAsync() when bytes have been received) */
+    NVIC_SetPriority(PendSV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), WE_PRIORITY_RX_DATA_PROCESSING, 0));
+    NVIC_EnableIRQ(PendSV_IRQn);
+#endif
+
+    /* USART3 clock enable */
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART3);
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
+
+    /* USART 3 GPIO initialization */
+    LL_GPIO_InitTypeDef gpioInitStruct = {0};
+
+    /* USART3 GPIO Configuration
+	 PB13   ------> USART3_CTS
+	 PB14   ------> USART3_RTS
+	 PC10   ------> USART3_TX
+	 PC11   ------> USART3_RX
+	 */
+    gpioInitStruct.Pin = LL_GPIO_PIN_10;
+    gpioInitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+    gpioInitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+    gpioInitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+    gpioInitStruct.Pull = LL_GPIO_PULL_NO;
+    gpioInitStruct.Alternate = LL_GPIO_AF_7;
+    LL_GPIO_Init(GPIOC, &gpioInitStruct);
+
+    gpioInitStruct.Pin = LL_GPIO_PIN_11;
+    gpioInitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+    gpioInitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+    gpioInitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+    gpioInitStruct.Pull = LL_GPIO_PULL_UP;
+    gpioInitStruct.Alternate = LL_GPIO_AF_7;
+    LL_GPIO_Init(GPIOC, &gpioInitStruct);
+
+    /* Flow control pins */
+    if (WE_FlowControl_NoFlowControl != WE_UART3_Internal.flowControl)
+    {
+        /* enable port clock */
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+
+        if (WE_FlowControl_RTSOnly == WE_UART3_Internal.flowControl || WE_FlowControl_RTSAndCTS == WE_UART3_Internal.flowControl)
+        {
+            gpioInitStruct.Pin = LL_GPIO_PIN_14;
+            gpioInitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+            gpioInitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+            gpioInitStruct.Pull = LL_GPIO_PULL_NO;
+            gpioInitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+            gpioInitStruct.Alternate = LL_GPIO_AF_7;
+            LL_GPIO_Init(GPIOB, &gpioInitStruct);
+        }
+        if (WE_FlowControl_CTSOnly == WE_UART3_Internal.flowControl || WE_FlowControl_RTSAndCTS == WE_UART3_Internal.flowControl)
+        {
+            gpioInitStruct.Pin = LL_GPIO_PIN_13;
+            gpioInitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+            gpioInitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+            gpioInitStruct.Pull = LL_GPIO_PULL_NO;
+            gpioInitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+            gpioInitStruct.Alternate = LL_GPIO_AF_7;
+            LL_GPIO_Init(GPIOB, &gpioInitStruct);
+        }
+    }
+
+    /* Initialize USART3 */
+
+    WE_UART3_Internal.uart = USART3;
+
+    LL_USART_InitTypeDef uartInitStruct = {0};
+    uartInitStruct.BaudRate = baudrate;
+    /* Data width / word length is specified including parity bit - so if using
+	 * a parity bit, 9 bit data width has to be set */
+    if (parity == WE_Parity_None)
+    {
+        uartInitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
+    }
+    else
+    {
+        uartInitStruct.DataWidth = LL_USART_DATAWIDTH_9B;
+    }
+    uartInitStruct.StopBits = LL_USART_STOPBITS_1;
+    switch (parity)
+    {
+        case WE_Parity_Odd:
+            uartInitStruct.Parity = LL_USART_PARITY_ODD;
+            break;
+
+        case WE_Parity_Even:
+            uartInitStruct.Parity = LL_USART_PARITY_EVEN;
+            break;
+
+        case WE_Parity_None:
+        default:
+            uartInitStruct.Parity = LL_USART_PARITY_NONE;
+            break;
+    }
+    uartInitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+    switch (WE_UART3_Internal.flowControl)
+    {
+        case WE_FlowControl_RTSOnly:
+            uartInitStruct.HardwareFlowControl = LL_USART_HWCONTROL_RTS;
+            break;
+
+        case WE_FlowControl_CTSOnly:
+            uartInitStruct.HardwareFlowControl = LL_USART_HWCONTROL_CTS;
+            break;
+
+        case WE_FlowControl_RTSAndCTS:
+            uartInitStruct.HardwareFlowControl = LL_USART_HWCONTROL_RTS_CTS;
+            break;
+
+        case WE_FlowControl_NoFlowControl:
+        default:
+            uartInitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
+            break;
+    }
+
+    uartInitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
+    if (ERROR == LL_USART_Init(WE_UART3_Internal.uart, &uartInitStruct))
+    {
+        return false;
+    }
+    LL_USART_ConfigAsyncMode(WE_UART3_Internal.uart);
+    LL_USART_Enable(WE_UART3_Internal.uart);
+
+    /* USART3 interrupt Init */
+    NVIC_SetPriority(USART3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), WE_PRIORITY_UART_RX, 0));
+    NVIC_EnableIRQ(USART3_IRQn);
+
+#if defined(WE_UART_DMA)
+    WE_DMA_for_UART3_Init();
+#else
+    // Legacy mode using USART interrupt
+    LL_USART_EnableIT_RXNE(WE_UART3_Internal.uart);
+#endif
+
+    return true;
+}
+
+bool WE_UART3_DeInit()
+{
+    if (WE_UART3_Internal.uart == NULL)
+    {
+        return true;
+    }
+
+#if defined(WE_UART_DMA)
+    WE_DMA_for_UART3_DeInit();
+#else
+    LL_USART_DisableIT_RXNE(WE_UART3_Internal.uart);
+#endif
+
+    WE_UART3_Internal.rxByteHandlerP = NULL;
+
+    NVIC_DisableIRQ(USART3_IRQn);
+    LL_USART_Disable(WE_UART3_Internal.uart);
+    LL_USART_DeInit(WE_UART3_Internal.uart);
+    LL_AHB1_GRP1_DisableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
+    LL_APB2_GRP1_DisableClock(LL_APB1_GRP1_PERIPH_USART3);
+
+    if (WE_FlowControl_NoFlowControl != WE_UART3_Internal.flowControl)
+    {
+        LL_AHB1_GRP1_DisableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+    }
+
+    WE_UART3_Internal.uart = NULL;
+    return true;
+}
+
+/**
+ * @brief Interrupt handler for data received from wireless module via UART.
+ *
+ * Handles the following interrupts, depending on whether DMA is enabled or not:
+ * - If DMA is enabled: Idle line interrupt
+ * - If DMA is disabled: Character received interrupt
+ */
+void USART3_IRQHandler()
+{
+#if defined(WE_UART_DMA)
+    if (LL_USART_IsActiveFlag_IDLE(USART3))
+    {
+        /* USART idle line interrupt (used only if DMA is enabled) */
+
+        LL_USART_ClearFlag_IDLE(USART3);
+        WE_UART3_CheckIfDmaDataAvailableAsync();
+    }
+#else
+    if (LL_USART_IsActiveFlag_RXNE(WE_UART3_Internal.uart))
+    {
+        /* Character has been received (used only if DMA is disabled) */
+
+        /* RXNE flag will be cleared by reading of DR register */
+        WE_UART3_Internal.receivedByte = LL_USART_ReceiveData8(WE_UART3_Internal.uart);
+        (*WE_UART3_Internal.rxByteHandlerP)(&WE_UART3_Internal.receivedByte, 1);
+    }
+    if (LL_USART_IsActiveFlag_ORE(WE_UART3_Internal.uart))
+    {
+        LL_USART_ClearFlag_ORE(WE_UART3_Internal.uart);
+    }
+#endif
+}
+
+#endif /* STM32F446xx */
+
 #ifdef WE_MICROSECOND_TICK
 void WE_DelayMicroseconds(uint32_t sleepForUsec)
 {
@@ -918,4 +1293,4 @@ void WE_DelayMicroseconds(uint32_t sleepForUsec)
 uint32_t WE_GetTickMicroseconds() { return DWT->CYCCNT / dwtTicksPerMicrosecond; }
 #endif /* WE_MICROSECOND_TICK */
 
-#endif /* STM32F401xE */
+#endif /* STM32F401xE || STM32F446xx */

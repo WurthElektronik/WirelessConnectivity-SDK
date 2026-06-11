@@ -33,10 +33,15 @@
 #ifndef METIS_EXAMPLES_H_INCLUDED
 #define METIS_EXAMPLES_H_INCLUDED
 
+#include <Metis/Metis.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern Metis_Pins_t Metis_pins;
+extern WE_UART_t Metis_uart;
 
 extern void Metis_Examples(void);
 

@@ -775,7 +775,13 @@ bool ProteusE_Reset()
     }
 
     /* wait for cnf */
-    return Wait4CNF(CMD_WAIT_TIME, PROTEUSE_CMD_GETSTATE_CNF, CMD_Status_NoStatus, true);
+    if (!Wait4CNF(CMD_WAIT_TIME, PROTEUSE_CMD_RESET_CNF, CMD_Status_Success, true))
+    {
+        return false;
+    }
+
+    /* wait for cnf */
+    return Wait4CNF(CMD_WAIT_TIME, PROTEUSE_CMD_GETSTATE_CNF, CMD_Status_NoStatus, false);
 }
 
 bool ProteusE_UartDisable()
@@ -892,8 +898,14 @@ bool ProteusE_FactoryReset()
         return false;
     }
 
+    /* wait for cnf */
+    if (!Wait4CNF(CMD_WAIT_TIME, PROTEUSE_CMD_FACTORYRESET_CNF, CMD_Status_Success, true))
+    {
+        return false;
+    }
+
     /* wait for reset after factory reset */
-    return Wait4CNF(CMD_WAIT_TIME, PROTEUSE_CMD_GETSTATE_CNF, CMD_Status_NoStatus, true);
+    return Wait4CNF(CMD_WAIT_TIME, PROTEUSE_CMD_GETSTATE_CNF, CMD_Status_NoStatus, false);
 }
 
 bool ProteusE_CheckNSet(ProteusE_UserSettings_t userSetting, uint8_t* valueP, uint8_t length)

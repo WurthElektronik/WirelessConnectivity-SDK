@@ -29,6 +29,7 @@
  */
 
 #include <ProteusE/ProteusE.h>
+#include <ProteusE/ProteusE_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
@@ -53,20 +54,26 @@ static void GpioRemoteConfigCallback(ProteusE_GPIOConfigBlock_t* gpioConfig);
 static void ErrorCallback(uint8_t errorCode);
 static void OnTransparentModeByteReceived(uint8_t* dataP, size_t size);
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static ProteusE_Pins_t ProteusE_pins = {
-    .ProteusE_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .ProteusE_Pin_BusyUartEnable = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_8)),
-    .ProteusE_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
-    .ProteusE_Pin_StatusLed1 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_9)),
+ProteusE_Pins_t ProteusE_pins = {
+    .ProteusE_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .ProteusE_Pin_BusyUartEnable = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
+    .ProteusE_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
+    .ProteusE_Pin_StatusLed1 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t ProteusE_uart;
+WE_UART_t ProteusE_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief The application's main function.
@@ -77,9 +84,6 @@ void ProteusE_Examples(void)
     ProteusE_uart.baudrate = PROTEUSE_DEFAULT_BAUDRATE;
     ProteusE_uart.flowControl = WE_FlowControl_NoFlowControl;
     ProteusE_uart.parity = WE_Parity_None;
-    ProteusE_uart.uartInit = WE_UART1_Init;
-    ProteusE_uart.uartDeinit = WE_UART1_DeInit;
-    ProteusE_uart.uartTransmit = WE_UART1_Transmit;
 
     CommandModeExample();
     //  TransparentModeExample();
@@ -438,8 +442,7 @@ static void SecurityCallback(uint8_t* btMac, ProteusE_SecurityState_t securitySt
 {
     static const char* stateStrings[] = {"rebonded", "bonded", "paired"};
 
-    WE_APP_PRINT("Encrypted link to device with BTMAC (0x%02x%02x%02x%02x%02x%02x) established (%s)", btMac[0], btMac[1], btMac[2], btMac[3], btMac[4], btMac[5], stateStrings[securityState]);
-    WE_APP_PRINT("\r\n");
+    WE_APP_PRINT("Encrypted link to device with BTMAC (0x%02x%02x%02x%02x%02x%02x) established (%s)\r\n", btMac[0], btMac[1], btMac[2], btMac[3], btMac[4], btMac[5], stateStrings[securityState]);
 }
 
 /**
@@ -468,13 +471,12 @@ static void PhyUpdateCallback(bool success, uint8_t* btMac, uint8_t phyRx, uint8
 {
     if (success)
     {
-        WE_APP_PRINT("Phy of connection to BTMAC (0x%02x%02x%02x%02x%02x%02x) updated (RX: %dMBit, TX: %dMBit)", btMac[0], btMac[1], btMac[2], btMac[3], btMac[4], btMac[5], phyRx, phyTx);
+        WE_APP_PRINT("Phy of connection to BTMAC (0x%02x%02x%02x%02x%02x%02x) updated (RX: %dMBit, TX: %dMBit)\r\n", btMac[0], btMac[1], btMac[2], btMac[3], btMac[4], btMac[5], phyRx, phyTx);
     }
     else
     {
-        WE_APP_PRINT("Failed to update Phy connection");
+        WE_APP_PRINT("Failed to update Phy connection\r\n");
     }
-    WE_APP_PRINT("\r\n");
 }
 
 /**

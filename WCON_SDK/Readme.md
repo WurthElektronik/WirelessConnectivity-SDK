@@ -7,9 +7,9 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |       Adrastea-I     |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 | 
+|          Reset (PC9)|-------->|Reset                 | 
 |                     |         |                      |  
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -23,9 +23,9 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |       Calypso-I      |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
@@ -37,13 +37,13 @@ The following sections contain wiring instructions for each radio module. Note t
 |                     |         |                      |
 |     UART1 CTS (PA11)|<--------|UART RTS              |
 |                     |         |                      |
-|     APP_MODE_0 (PA0)|-------->|APP_MODE_0            |
+|     APP_MODE_0 (PB2)|-------->|APP_MODE_0            |
 |                     |         |                      |
-|     APP_MODE_1 (PA1)|-------->|APP_MODE_1            |
+|     APP_MODE_1 (PA8)|-------->|APP_MODE_1            |
 |                     |         |                      |
-|   STATUS_IND_0 (PB8)|<--------|STATUS_IND_0          |
+|   STATUS_IND_0 (PB1)|<--------|STATUS_IND_0          |
 |                     |         |                      |
-|   STATUS_IND_1 (PB9)|<--------|STATUS_IND_1          |
+|  STATUS_IND_1 (PB10)|<--------|STATUS_IND_1          |
 |_____________________|         |______________________|
 ```
 
@@ -52,9 +52,9 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |      Cordelia-I      |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
@@ -66,13 +66,13 @@ The following sections contain wiring instructions for each radio module. Note t
 |                     |         |                      |
 |     UART1 CTS (PA11)|<--------|UART RTS              |
 |                     |         |                      |
-|     APP_MODE_0 (PA0)|-------->|APP_MODE_0            |
+|     APP_MODE_0 (PB2)|-------->|APP_MODE_0            |
 |                     |         |                      |
-|     APP_MODE_1 (PA1)|-------->|APP_MODE_1            |
+|     APP_MODE_1 (PA8)|-------->|APP_MODE_1            |
 |                     |         |                      |
-|   STATUS_IND_0 (PB8)|<--------|STATUS_IND_0          |
+|   STATUS_IND_0 (PB1)|<--------|STATUS_IND_0          |
 |                     |         |                      |
-|   STATUS_IND_1 (PB9)|<--------|STATUS_IND_1          |
+|  STATUS_IND_1 (PB10)|<--------|STATUS_IND_1          |
 |_____________________|         |______________________|
 ```
 
@@ -81,9 +81,9 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |       Daphnis-I      |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA5)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
@@ -98,7 +98,7 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |    Metis (-I, -II)   |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -115,11 +115,11 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |        Metis-e       |
 |                     |         |                      |
-|         Sleep  (PA9)|-------->|Wake-up               |
+|          Reset (PC9)|-------->|Reset                 |
+|                     |         |                      |
+|        Sleep  (PB12)|-------->|Wake-up               |
 |                     |         |                      |
 |         Boot   (PA7)|-------->|Boot                  |
-|                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -136,9 +136,9 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |     Proteus-II       |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
@@ -146,7 +146,7 @@ The following sections contain wiring instructions for each radio module. Note t
 |                     |         |                      |
 |           Busy (PB8)|<--------|Busy                  |
 |                     |         |                      |
-| STATUS (LED 2) (PB9)|<--------|LED_2                 |
+| STATUS (LED 2) (PB1)|<--------|LED_2                 |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -163,17 +163,17 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |     Proteus-III      |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
-|           Mode (PA8)|-------->|Mode                  |
+|           Mode (PB2)|-------->|Mode                  |
 |                     |         |                      |
-|           Busy (PB8)|<--------|Busy                  |
+|           Busy (PA8)|<--------|Busy                  |
 |                     |         |                      |
-| STATUS (LED 2) (PB9)|<--------|LED_2                 |
+| STATUS (LED 2) (PB1)|<--------|LED_2                 |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -190,15 +190,15 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |     Proteus-IV       |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|          Mode0 (PA7)|-------->|Mode0                 |
+|         Mode0 (PB12)|-------->|Mode0                 |
 |                     |         |                      |
-|          Mode1 (PA8)|-------->|Mode1                 |
+|          Mode1 (PA7)|-------->|Mode1                 |
 |                     |         |                      |
-|          LED_1 (PB9)|<--------|LED_1                 |
+|          LED_1 (PB2)|<--------|LED_1                 |
 |                     |         |                      |
-|    UART_ENABLE (PA0)|<--------|UART_ENABLE           |
+|    UART_ENABLE (PA0)|-------->|UART_ENABLE           |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -215,13 +215,13 @@ The following sections contain wiring instructions for each radio module. Note t
  _______________________           ______________________
 |         STM32         |         |      Proteus-e       |
 |                       |         |                      |
-|           Reset (PA10)|-------->|Reset                 |
+|            Reset (PC9)|-------->|Reset                 |
 |                       |         |                      |
-|             Mode (PA8)|-------->|Mode                  |
+|Busy/UART_Enable (PB12)|<------->|Busy/UART_Enable      |
 |                       |         |                      |
-| Busy/UART_Enable (PB8)|<------->|Busy/UART_Enable      |
+|             Mode (PA7)|-------->|Mode                  |
 |                       |         |                      |
-|   STATUS (LED 1) (PB9)|<--------|LED_1                 |
+|   STATUS (LED 1) (PB2)|<--------|LED_1                 |
 |                       |         |                      |
 |         UART1 TX (PB6)|-------->|UART RX               |
 |                       |         |                      |
@@ -238,9 +238,9 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |     Stephano-I       |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA5)|-------->|GPIO10                |
+|       Wake_up (PB12)|-------->|GPIO10                |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -257,13 +257,13 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |      Tarvos-III      |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
-|           Mode (PA8)|-------->|Mode                  |
+|           Mode (PB2)|-------->|Mode                  |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -280,13 +280,13 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |       Tarvos-e       |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|        Wake_up (B12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
-|           Mode (PA8)|-------->|Mode                  |
+|           Mode (PB2)|-------->|Mode                  |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -303,13 +303,13 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |     Telesto-III      |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
-|           Mode (PA8)|-------->|Mode                  |
+|           Mode (PB2)|-------->|Mode                  |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -326,13 +326,13 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |    Thebe-II (-IND)   |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
-|           Mode (PA8)|-------->|Mode                  |
+|           Mode (PB2)|-------->|Mode                  |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -349,13 +349,13 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |      Themisto-I      |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
 |           Boot (PA7)|-------->|Boot                  |
 |                     |         |                      |
-|           Mode (PA8)|-------->|Mode                  |
+|           Mode (PB2)|-------->|Mode                  |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -372,11 +372,11 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |       Thyone-e       |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|           Mode (PA8)|-------->|Mode                  |
+|          Busy (PB12)|<--------|Busy                  |
 |                     |         |                      |
-|           Busy (PA9)|<--------|Busy                  |
+|           Mode (PA7)|-------->|Mode                  |
 |                     |         |                      |
 |       UART1 TX (PB6)|-------->|UART RX               |
 |                     |         |                      |
@@ -393,13 +393,13 @@ The following sections contain wiring instructions for each radio module. Note t
  _____________________           ______________________
 |        STM32        |         |       Thyone-I       |
 |                     |         |                      |
-|         Reset (PA10)|-------->|Reset                 |
+|          Reset (PC9)|-------->|Reset                 |
 |                     |         |                      |
-|        Wake_up (PA9)|-------->|Wake_up               |
+|       Wake_up (PB12)|-------->|Wake_up               |
 |                     |         |                      |
-|           Busy (PA6)|<--------|Busy                  |
+|           Busy (PA7)|<--------|Busy                  |
 |                     |         |                      |
-|           Boot (PA7)|-------->|Boot                  |
+|           Boot (PB2)|-------->|Boot                  |
 |                     |         |                      |
 |           Mode (PA8)|-------->|Mode                  |
 |                     |         |                      |
@@ -416,3 +416,4 @@ The following sections contain wiring instructions for each radio module. Note t
 # STM32 Nucleo pinout
 ![alt text](Doc/Nucleo-L073RZ.png)
 ![alt text](Doc/Nucleo-F401RE.png)
+![alt text](Doc/Nucleo-F446RE.png)

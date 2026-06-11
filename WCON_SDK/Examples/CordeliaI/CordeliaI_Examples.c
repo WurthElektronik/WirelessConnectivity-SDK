@@ -78,17 +78,23 @@ bool CordeliaI_Examples_IoTConnect = false;
  */
 bool CordeliaI_Examples_ip4Acquired = false;
 
+#if defined(WE_PLATFORM_STM32)
 CordeliaI_Pins_t CordeliaI_pins = {
-    .CordeliaI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .CordeliaI_Pin_WakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+    .CordeliaI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .CordeliaI_Pin_WakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .CordeliaI_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .CordeliaI_Pin_AppMode0 = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_0)),
-    .CordeliaI_Pin_AppMode1 = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_1)),
-    .CordeliaI_Pin_StatusInd0 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_8)),
-    .CordeliaI_Pin_StatusInd1 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_9)),
+    .CordeliaI_Pin_AppMode0 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
+    .CordeliaI_Pin_AppMode1 = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+    .CordeliaI_Pin_StatusInd0 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_1)),
+    .CordeliaI_Pin_StatusInd1 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_10)),
 };
 
-WE_UART_t CordeliaI_uart;
+WE_UART_t CordeliaI_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief Waits for the startup event to be received.
@@ -153,9 +159,6 @@ void CordeliaI_Examples(void)
     CordeliaI_uart.baudrate = 115200;
     CordeliaI_uart.flowControl = WE_FlowControl_NoFlowControl;
     CordeliaI_uart.parity = WE_Parity_None;
-    CordeliaI_uart.uartInit = WE_UART1_Init;
-    CordeliaI_uart.uartDeinit = WE_UART1_DeInit;
-    CordeliaI_uart.uartTransmit = WE_UART1_Transmit;
 
     CordeliaI_Quarklink_Example();
 

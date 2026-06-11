@@ -69,21 +69,21 @@ static bool DaphnisI_GetStringSetting(const char* setting, char* string, uint16_
 
 bool DaphnisI_SetUARTBaudRateUS(DaphnisI_UARTBaudRate_t baudRate) { return DaphnisI_SetIntSetting(AT_US(AT_UARTBAUDRATE), (uint8_t)baudRate, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
-bool DaphnisI_GetUARTBaudRateUS(DaphnisI_UARTBaudRate_t* baudRateP) { return DaphnisI_GetIntSetting(AT_US(AT_UARTBAUDRATE), (uint8_t*)baudRateP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
+bool DaphnisI_GetUARTBaudRateUS(DaphnisI_UARTBaudRate_t* baudRateP) { return DaphnisI_GetIntSetting(AT_US(AT_UARTBAUDRATE), baudRateP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_UARTBaudRate_t) | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
-bool DaphnisI_GetUARTBaudRateRS(DaphnisI_UARTBaudRate_t* baudRateP) { return DaphnisI_GetIntSetting(AT_RS(AT_UARTBAUDRATE), (uint8_t*)baudRateP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
+bool DaphnisI_GetUARTBaudRateRS(DaphnisI_UARTBaudRate_t* baudRateP) { return DaphnisI_GetIntSetting(AT_RS(AT_UARTBAUDRATE), baudRateP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_UARTBaudRate_t) | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
 bool DaphnisI_SetModeUS(DaphnisI_Mode_t mode) { return DaphnisI_SetIntSetting(AT_US(AT_MODE), (uint8_t)mode, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
-bool DaphnisI_GetModeUS(DaphnisI_Mode_t* modeP) { return DaphnisI_GetIntSetting(AT_US(AT_MODE), (uint8_t*)modeP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
+bool DaphnisI_GetModeUS(DaphnisI_Mode_t* modeP) { return DaphnisI_GetIntSetting(AT_US(AT_MODE), modeP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_Mode_t) | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
-bool DaphnisI_GetModeRS(DaphnisI_Mode_t* modeP) { return DaphnisI_GetIntSetting(AT_RS(AT_MODE), (uint8_t*)modeP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
+bool DaphnisI_GetModeRS(DaphnisI_Mode_t* modeP) { return DaphnisI_GetIntSetting(AT_RS(AT_MODE), modeP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_Mode_t) | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
 bool DaphnisI_SetP2PRoleUS(DaphnisI_P2P_Role_t role) { return DaphnisI_SetIntSetting(AT_US(AT_P2PROLE), (uint8_t)role, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
-bool DaphnisI_GetP2PRoleUS(DaphnisI_P2P_Role_t* roleP) { return DaphnisI_GetIntSetting(AT_US(AT_P2PROLE), (uint8_t*)roleP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
+bool DaphnisI_GetP2PRoleUS(DaphnisI_P2P_Role_t* roleP) { return DaphnisI_GetIntSetting(AT_US(AT_P2PROLE), roleP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_P2P_Role_t) | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
-bool DaphnisI_GetP2PRoleRS(DaphnisI_P2P_Role_t* roleP) { return DaphnisI_GetIntSetting(AT_RS(AT_P2PROLE), (uint8_t*)roleP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
+bool DaphnisI_GetP2PRoleRS(DaphnisI_P2P_Role_t* roleP) { return DaphnisI_GetIntSetting(AT_RS(AT_P2PROLE), roleP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_P2P_Role_t) | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
 bool DaphnisI_SetP2PDutyCycleTrackerUS(bool dct_state) { return DaphnisI_SetIntSetting(AT_US(AT_P2PDCTRACKER), (uint8_t)dct_state, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
@@ -211,9 +211,9 @@ bool DaphnisI_GetP2PMACGroupIDRS(uint8_t* group_idP) { return DaphnisI_GetIntSet
 
 bool DaphnisI_SetP2PMACEncryptionModeUS(DaphnisI_P2P_Encryption_Mode_t enc_mode) { return DaphnisI_SetIntSetting(AT_US(AT_P2PMACENCMODE), (uint8_t)enc_mode, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
-bool DaphnisI_GetP2PMACEncryptionModeUS(DaphnisI_P2P_Encryption_Mode_t* enc_modeP) { return DaphnisI_GetIntSetting(AT_US(AT_P2PMACENCMODE), (uint8_t*)enc_modeP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
+bool DaphnisI_GetP2PMACEncryptionModeUS(DaphnisI_P2P_Encryption_Mode_t* enc_modeP) { return DaphnisI_GetIntSetting(AT_US(AT_P2PMACENCMODE), enc_modeP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_P2P_Encryption_Mode_t) | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
-bool DaphnisI_GetP2PMACEncryptionModeRS(DaphnisI_P2P_Encryption_Mode_t* enc_modeP) { return DaphnisI_GetIntSetting(AT_RS(AT_P2PMACENCMODE), (uint8_t*)enc_modeP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
+bool DaphnisI_GetP2PMACEncryptionModeRS(DaphnisI_P2P_Encryption_Mode_t* enc_modeP) { return DaphnisI_GetIntSetting(AT_RS(AT_P2PMACENCMODE), enc_modeP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_P2P_Encryption_Mode_t) | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
 bool DaphnisI_SetP2PMACEncryptionKeyUS(DaphnisI_P2P_Encryption_Key_t enc_key)
 {
@@ -344,7 +344,7 @@ static bool DaphnisI_GetStringSetting(const char* setting, char* string, uint16_
 
 bool DaphnisI_SetUARTBaudRate(DaphnisI_UARTBaudRate_t baudRate) { return DaphnisI_SetIntSetting(AT_UARTBAUDRATE, (uint8_t)baudRate, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
-bool DaphnisI_GetUARTBaudRate(DaphnisI_UARTBaudRate_t* baudRateP) { return DaphnisI_GetIntSetting(AT_UARTBAUDRATE, (uint8_t*)baudRateP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_INTFLAGS_SIZE8 | ATCOMMAND_INTFLAGS_UNSIGNED); }
+bool DaphnisI_GetUARTBaudRate(DaphnisI_UARTBaudRate_t* baudRateP) { return DaphnisI_GetIntSetting(AT_UARTBAUDRATE, baudRateP, ATCOMMAND_INTFLAGS_NOTATION_DEC | ATCOMMAND_TYPE_TO_INTFLAG_SIZE(DaphnisI_UARTBaudRate_t) | ATCOMMAND_INTFLAGS_UNSIGNED); }
 
 #endif
 

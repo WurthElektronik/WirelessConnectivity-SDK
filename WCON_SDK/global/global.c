@@ -59,6 +59,9 @@ void WE_Platform_Init(void)
 
     /* Configure the system clock */
     WE_SystemClock_Config();
+
+    /* add delay to not start the example too early, as flasher starts old code before it's actually flashed */
+    WE_Delay(5000);
 }
 
 /**

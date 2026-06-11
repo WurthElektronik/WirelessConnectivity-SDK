@@ -29,26 +29,33 @@
  */
 
 #include <TarvosE/TarvosE.h>
+#include <TarvosE/TarvosE_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static TarvosE_Pins_t TarvosE_pins = {
-    .TarvosE_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .TarvosE_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+TarvosE_Pins_t TarvosE_pins = {
+    .TarvosE_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .TarvosE_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .TarvosE_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .TarvosE_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+    .TarvosE_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t TarvosE_uart;
+WE_UART_t TarvosE_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /* Pick the example to be executed in the main function. */
 static void CommandModeExample();
@@ -88,9 +95,6 @@ void TarvosE_Examples(void)
     TarvosE_uart.baudrate = TARVOSE_DEFAULT_BAUDRATE;
     TarvosE_uart.flowControl = WE_FlowControl_NoFlowControl;
     TarvosE_uart.parity = WE_Parity_None;
-    TarvosE_uart.uartInit = WE_UART1_Init;
-    TarvosE_uart.uartDeinit = WE_UART1_DeInit;
-    TarvosE_uart.uartTransmit = WE_UART1_Transmit;
 
     CommandModeExample();
 }

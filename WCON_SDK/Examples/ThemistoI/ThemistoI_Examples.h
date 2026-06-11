@@ -33,10 +33,15 @@
 #ifndef THEMISTOI_EXAMPLES_H_INCLUDED
 #define THEMISTOI_EXAMPLES_H_INCLUDED
 
+#include <ThemistoI/ThemistoI.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern ThemistoI_Pins_t ThemistoI_pins;
+extern WE_UART_t ThemistoI_uart;
 
 extern void ThemistoI_Examples(void);
 

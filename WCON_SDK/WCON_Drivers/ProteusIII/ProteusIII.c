@@ -29,6 +29,7 @@
  */
 
 #include <ProteusIII/ProteusIII.h>
+#include <global/endian_utils.h>
 #include <global/global.h>
 #include <stdio.h>
 #include <string.h>
@@ -254,6 +255,36 @@ static uint8_t rxBuffer[sizeof(ProteusIII_CMD_Frame_t)]; /* For UART RX from mod
  *         Static functions           *
  **************************************/
 
+/**
+ * @brief Fills the checksum and transmits the command over UART.
+ *
+ * @param[in] commandP: Pointer to the command frame.
+ *
+ * @return true if transmission succeeded,
+ *         false otherwise
+ */
+static bool ProteusIII_Command_Transmit(ProteusIII_CMD_Frame_t* commandP)
+{
+    if ((commandP == NULL))
+    {
+        return false;
+    }
+
+    uint16_t command_length = commandP->Length;
+
+    commandP->Length = host_to_le16(command_length);
+
+    uint8_t checksum = (uint8_t)commandP->Stx;
+    uint8_t* pArray = (uint8_t*)commandP;
+    for (uint16_t i = 1; i < (command_length + LENGTH_CMD_OVERHEAD_WITHOUT_CRC); i++)
+    {
+        checksum ^= pArray[i];
+    }
+    commandP->Data[command_length] = checksum;
+
+    return ProteusIII_uartP->uartTransmit((uint8_t*)commandP, command_length + LENGTH_CMD_OVERHEAD);
+}
+
 static void ClearReceiveBuffers()
 {
     bytesToReceive = 0;
@@ -271,8 +302,10 @@ static void HandleRxPacket(uint8_t* prxBuffer)
     cmdConfirmation.cmd = CNFINVALID;
     cmdConfirmation.status = CMD_Status_Invalid;
 
-    uint16_t cmdLength = ((ProteusIII_CMD_Frame_t*)prxBuffer)->Length;
+    uint16_t cmdLength = host_to_le16(((ProteusIII_CMD_Frame_t*)prxBuffer)->Length);
     memcpy(&rxPacket, prxBuffer, cmdLength + LENGTH_CMD_OVERHEAD);
+
+    rxPacket.Length = cmdLength;
 
     switch (rxPacket.Cmd)
     {
@@ -716,21 +749,6 @@ static bool Wait4CNF(uint32_t maxTimeMs, uint8_t expectedCmdConfirmation, Proteu
     return true;
 }
 
-/**
- * @brief Function to add the checksum at the end of the data packet.
- */
-static bool FillChecksum(ProteusIII_CMD_Frame_t* cmd)
-{
-    uint8_t checksum = (uint8_t)cmd->Stx;
-    uint8_t* pArray = (uint8_t*)cmd;
-    for (uint16_t i = 1; i < (cmd->Length + LENGTH_CMD_OVERHEAD_WITHOUT_CRC); i++)
-    {
-        checksum ^= pArray[i];
-    }
-    cmd->Data[cmd->Length] = checksum;
-    return true;
-}
-
 /**************************************
  *         Global functions           *
  **************************************/
@@ -914,14 +932,19 @@ bool ProteusIII_Reset()
     txPacket.Cmd = PROTEUSIII_CMD_RESET_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
 
     /* wait for cnf */
-    return Wait4CNF(CMD_WAIT_TIME, PROTEUSIII_CMD_GETSTATE_CNF, CMD_Status_NoStatus, true);
+    if (!Wait4CNF(CMD_WAIT_TIME, PROTEUSIII_CMD_RESET_CNF, CMD_Status_Success, true))
+    {
+        return false;
+    }
+
+    /* wait for cnf */
+    return Wait4CNF(CMD_WAIT_TIME, PROTEUSIII_CMD_GETSTATE_CNF, CMD_Status_NoStatus, false);
 }
 
 bool ProteusIII_Disconnect()
@@ -929,8 +952,7 @@ bool ProteusIII_Disconnect()
     txPacket.Cmd = PROTEUSIII_CMD_DISCONNECT_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -944,8 +966,7 @@ bool ProteusIII_Sleep()
     txPacket.Cmd = PROTEUSIII_CMD_SLEEP_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -959,8 +980,7 @@ bool ProteusIII_UartDisable()
     txPacket.Cmd = PROTEUSIII_CMD_UART_DISABLE_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -981,8 +1001,7 @@ bool ProteusIII_Transmit(uint8_t* payloadP, uint16_t length)
 
     memcpy(&txPacket.Data[0], payloadP, length);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1007,8 +1026,7 @@ bool ProteusIII_SetBeacon(uint8_t* beaconDataP, uint16_t length)
 
     memcpy(&txPacket.Data[0], beaconDataP, length);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1026,14 +1044,19 @@ bool ProteusIII_FactoryReset()
     txPacket.Cmd = PROTEUSIII_CMD_FACTORYRESET_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
+    {
+        return false;
+    }
+
+    /* wait for cnf */
+    if (!Wait4CNF(CMD_WAIT_TIME, PROTEUSIII_CMD_FACTORYRESET_CNF, CMD_Status_Success, true))
     {
         return false;
     }
 
     /* wait for reset after factory reset */
-    return Wait4CNF(CMD_WAIT_TIME, PROTEUSIII_CMD_GETSTATE_CNF, CMD_Status_NoStatus, true);
+    return Wait4CNF(CMD_WAIT_TIME, PROTEUSIII_CMD_GETSTATE_CNF, CMD_Status_NoStatus, false);
 }
 
 bool ProteusIII_CheckNSet(ProteusIII_UserSettings_t userSetting, uint8_t* valueP, uint8_t length)
@@ -1078,8 +1101,7 @@ bool ProteusIII_Set(ProteusIII_UserSettings_t userSetting, uint8_t* valueP, uint
     txPacket.Data[0] = userSetting;
     memcpy(&txPacket.Data[1], valueP, length);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1097,6 +1119,7 @@ bool ProteusIII_SetDeviceName(uint8_t* deviceNameP, uint8_t nameLength) { return
 
 bool ProteusIII_SetAdvertisingTimeout(uint16_t advTimeout)
 {
+    advTimeout = host_to_le16(advTimeout);
     uint8_t help[2];
     memcpy(help, (uint8_t*)&advTimeout, 2);
     return ProteusIII_Set(ProteusIII_USERSETTING_RF_ADVERTISING_TIMEOUT, help, 2);
@@ -1118,14 +1141,23 @@ bool ProteusIII_SetBeaconFlags(ProteusIII_BeaconFlags_t beaconFlags)
 
 bool ProteusIII_SetCFGFlags(uint16_t cfgFlags)
 {
+    cfgFlags = host_to_le16(cfgFlags);
     uint8_t help[2];
     memcpy(help, (uint8_t*)&cfgFlags, 2);
     return ProteusIII_Set(ProteusIII_USERSETTING_RF_CFGFLAGS, help, 2);
 }
 
-bool ProteusIII_SetConnectionTiming(ProteusIII_ConnectionTiming_t connectionTiming) { return ProteusIII_Set(ProteusIII_USERSETTING_RF_CONNECTION_TIMING, (uint8_t*)&connectionTiming, 1); }
+bool ProteusIII_SetConnectionTiming(ProteusIII_ConnectionTiming_t connectionTiming)
+{
+    uint8_t connection_timing = connectionTiming;
+    return ProteusIII_Set(ProteusIII_USERSETTING_RF_CONNECTION_TIMING, &connection_timing, 1);
+}
 
-bool ProteusIII_SetScanTiming(ProteusIII_ScanTiming_t scanTiming) { return ProteusIII_Set(ProteusIII_USERSETTING_RF_SCAN_TIMING, (uint8_t*)&scanTiming, 1); }
+bool ProteusIII_SetScanTiming(ProteusIII_ScanTiming_t scanTiming)
+{
+    uint8_t scan_timing = scanTiming;
+    return ProteusIII_Set(ProteusIII_USERSETTING_RF_SCAN_TIMING, &scan_timing, 1);
+}
 
 bool ProteusIII_SetScanFactor(uint8_t scanFactor)
 {
@@ -1136,11 +1168,23 @@ bool ProteusIII_SetScanFactor(uint8_t scanFactor)
     return ProteusIII_Set(ProteusIII_USERSETTING_RF_SCAN_FACTOR, &scanFactor, 1);
 }
 
-bool ProteusIII_SetTXPower(ProteusIII_TXPower_t txPower) { return ProteusIII_Set(ProteusIII_USERSETTING_RF_TX_POWER, (uint8_t*)&txPower, 1); }
+bool ProteusIII_SetTXPower(ProteusIII_TXPower_t txPower)
+{
+    uint8_t tx_power = txPower;
+    return ProteusIII_Set(ProteusIII_USERSETTING_RF_TX_POWER, &tx_power, 1);
+}
 
-bool ProteusIII_SetSecFlags(ProteusIII_SecFlags_t secFlags) { return ProteusIII_Set(ProteusIII_USERSETTING_RF_SEC_FLAGS, (uint8_t*)&secFlags, 1); }
+bool ProteusIII_SetSecFlags(ProteusIII_SecFlags_t secFlags)
+{
+    uint8_t sec_flags = secFlags;
+    return ProteusIII_Set(ProteusIII_USERSETTING_RF_SEC_FLAGS, &sec_flags, 1);
+}
 
-bool ProteusIII_SetSecFlagsPeripheralOnly(ProteusIII_SecFlags_t secFlags) { return ProteusIII_Set(ProteusIII_USERSETTING_RF_SECFLAGSPERONLY, (uint8_t*)&secFlags, 1); }
+bool ProteusIII_SetSecFlagsPeripheralOnly(ProteusIII_SecFlags_t secFlags)
+{
+    uint8_t sec_flags = secFlags;
+    return ProteusIII_Set(ProteusIII_USERSETTING_RF_SECFLAGSPERONLY, &sec_flags, 1);
+}
 
 bool ProteusIII_SetBaudrateIndex(ProteusIII_BaudRate_t baudrate, ProteusIII_UartParity_t parity, bool flowControlEnable)
 {
@@ -1167,6 +1211,7 @@ bool ProteusIII_SetStaticPasskey(uint8_t* staticPasskeyP) { return ProteusIII_Se
 
 bool ProteusIII_SetAppearance(uint16_t appearance)
 {
+    appearance = host_to_le16(appearance);
     uint8_t help[2];
     memcpy(help, (uint8_t*)&appearance, 2);
     return ProteusIII_Set(ProteusIII_USERSETTING_RF_APPEARANCE, help, 2);
@@ -1191,8 +1236,7 @@ bool ProteusIII_Get(ProteusIII_UserSettings_t userSetting, uint8_t* responseP, u
     txPacket.Length = 1;
     txPacket.Data[0] = userSetting;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1228,10 +1272,19 @@ bool ProteusIII_GetDeviceInfo(ProteusIII_DeviceInfo_t* deviceInfoP)
     {
         return false;
     }
-    memcpy(&deviceInfoP->osVersion, help, 2);
-    memcpy(&deviceInfoP->buildCode, help + 2, 4);
-    memcpy(&deviceInfoP->packageVariant, help + 6, 2);
-    memcpy(&deviceInfoP->chipId, help + 8, 4);
+
+    memcpy(&deviceInfoP->osVersion, &help[0], sizeof(deviceInfoP->osVersion));
+    deviceInfoP->osVersion = host_from_le16(deviceInfoP->osVersion);
+
+    memcpy(&deviceInfoP->buildCode, &help[2], sizeof(deviceInfoP->buildCode));
+    deviceInfoP->buildCode = host_from_le32(deviceInfoP->buildCode);
+
+    memcpy(&deviceInfoP->packageVariant, &help[6], sizeof(deviceInfoP->packageVariant));
+    deviceInfoP->packageVariant = host_from_le16(deviceInfoP->packageVariant);
+
+    memcpy(&deviceInfoP->chipId, &help[8], sizeof(deviceInfoP->chipId));
+    deviceInfoP->chipId = host_from_le32(deviceInfoP->chipId);
+
     return true;
 }
 
@@ -1272,6 +1325,7 @@ bool ProteusIII_GetAdvertisingTimeout(uint16_t* advTimeoutP)
     if (ProteusIII_Get(ProteusIII_USERSETTING_RF_ADVERTISING_TIMEOUT, help, &length))
     {
         memcpy((uint8_t*)advTimeoutP, help, 2);
+        *advTimeoutP = host_from_le16(*advTimeoutP);
         return true;
     }
 
@@ -1320,14 +1374,42 @@ bool ProteusIII_GetBeaconFlags(ProteusIII_BeaconFlags_t* beaconFlagsP)
 
 bool ProteusIII_GetConnectionTiming(ProteusIII_ConnectionTiming_t* connectionTimingP)
 {
+    if (connectionTimingP == NULL)
+    {
+        return false;
+    }
+
+    uint8_t connection_timing;
     uint16_t length;
-    return ProteusIII_Get(ProteusIII_USERSETTING_RF_CONNECTION_TIMING, (uint8_t*)connectionTimingP, &length);
+
+    if (!ProteusIII_Get(ProteusIII_USERSETTING_RF_CONNECTION_TIMING, &connection_timing, &length))
+    {
+        return false;
+    }
+
+    *connectionTimingP = connection_timing;
+
+    return true;
 }
 
 bool ProteusIII_GetScanTiming(ProteusIII_ScanTiming_t* scanTimingP)
 {
+    if (scanTimingP == NULL)
+    {
+        return false;
+    }
+
+    uint8_t scan_timing;
     uint16_t length;
-    return ProteusIII_Get(ProteusIII_USERSETTING_RF_SCAN_TIMING, (uint8_t*)scanTimingP, &length);
+
+    if (!ProteusIII_Get(ProteusIII_USERSETTING_RF_SCAN_TIMING, &scan_timing, &length))
+    {
+        return false;
+    }
+
+    *scanTimingP = scan_timing;
+
+    return true;
 }
 
 bool ProteusIII_GetScanFactor(uint8_t* scanFactorP)
@@ -1338,20 +1420,62 @@ bool ProteusIII_GetScanFactor(uint8_t* scanFactorP)
 
 bool ProteusIII_GetTXPower(ProteusIII_TXPower_t* txPowerP)
 {
+    if (txPowerP == NULL)
+    {
+        return false;
+    }
+
+    uint8_t tx_power;
     uint16_t length;
-    return ProteusIII_Get(ProteusIII_USERSETTING_RF_TX_POWER, (uint8_t*)txPowerP, &length);
+
+    if (!ProteusIII_Get(ProteusIII_USERSETTING_RF_TX_POWER, &tx_power, &length))
+    {
+        return false;
+    }
+
+    *txPowerP = tx_power;
+
+    return true;
 }
 
 bool ProteusIII_GetSecFlags(ProteusIII_SecFlags_t* secFlagsP)
 {
+    if (secFlagsP == NULL)
+    {
+        return false;
+    }
+
+    uint8_t sec_flags;
     uint16_t length;
-    return ProteusIII_Get(ProteusIII_USERSETTING_RF_SEC_FLAGS, (uint8_t*)secFlagsP, &length);
+
+    if (!ProteusIII_Get(ProteusIII_USERSETTING_RF_SEC_FLAGS, &sec_flags, &length))
+    {
+        return false;
+    }
+
+    *secFlagsP = sec_flags;
+
+    return true;
 }
 
 bool ProteusIII_GetSecFlagsPeripheralOnly(ProteusIII_SecFlags_t* secFlagsP)
 {
+    if (secFlagsP == NULL)
+    {
+        return false;
+    }
+
+    uint8_t sec_flags;
     uint16_t length;
-    return ProteusIII_Get(ProteusIII_USERSETTING_RF_SECFLAGSPERONLY, (uint8_t*)secFlagsP, &length);
+
+    if (!ProteusIII_Get(ProteusIII_USERSETTING_RF_SECFLAGSPERONLY, &sec_flags, &length))
+    {
+        return false;
+    }
+
+    *secFlagsP = sec_flags;
+
+    return true;
 }
 
 bool ProteusIII_GetBaudrateIndex(ProteusIII_BaudRate_t* baudrateP, ProteusIII_UartParity_t* parityP, bool* flowControlEnableP)
@@ -1417,6 +1541,7 @@ bool ProteusIII_GetAppearance(uint16_t* appearanceP)
     if (ProteusIII_Get(ProteusIII_USERSETTING_RF_APPEARANCE, help, &length))
     {
         memcpy((uint8_t*)appearanceP, help, 2);
+        *appearanceP = host_from_le16(*appearanceP);
         return true;
     }
 
@@ -1460,6 +1585,7 @@ bool ProteusIII_GetCFGFlags(uint16_t* cfgFlagsP)
     if (ProteusIII_Get(ProteusIII_USERSETTING_RF_CFGFLAGS, help, &length))
     {
         memcpy((uint8_t*)cfgFlagsP, help, 2);
+        *cfgFlagsP = host_from_le16(*cfgFlagsP);
         return true;
     }
 
@@ -1476,8 +1602,7 @@ bool ProteusIII_GetState(ProteusIII_ModuleState_t* moduleStateP)
     txPacket.Cmd = PROTEUSIII_CMD_GETSTATE_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1511,8 +1636,7 @@ bool ProteusIII_ScanStart()
     txPacket.Cmd = PROTEUSIII_CMD_SCANSTART_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1526,8 +1650,7 @@ bool ProteusIII_ScanStop()
     txPacket.Cmd = PROTEUSIII_CMD_SCANSTOP_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1547,8 +1670,7 @@ bool ProteusIII_GetDevices(ProteusIII_GetDevices_t* devicesP)
     txPacket.Cmd = PROTEUSIII_CMD_GETDEVICES_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         ProteusIII_getDevicesP = NULL;
         return false;
@@ -1569,10 +1691,10 @@ bool ProteusIII_Connect(uint8_t* btMacP)
 
     txPacket.Cmd = PROTEUSIII_CMD_CONNECT_REQ;
     txPacket.Length = 6;
+
     memcpy(&txPacket.Data[0], btMacP, 6);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1592,8 +1714,7 @@ bool ProteusIII_Passkey(uint8_t* passkeyP)
     txPacket.Length = 6;
     memcpy(&txPacket.Data[0], passkeyP, 6);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1608,8 +1729,7 @@ bool ProteusIII_NumericCompareConfirm(bool keyIsOk)
     txPacket.Length = 1;
     txPacket.Data[0] = keyIsOk ? 0x00 : 0x01;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1626,8 +1746,7 @@ bool ProteusIII_PhyUpdate(ProteusIII_Phy_t phy)
         txPacket.Length = 1;
         txPacket.Data[0] = (uint8_t)phy;
 
-        FillChecksum(&txPacket);
-        if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+        if (!ProteusIII_Command_Transmit(&txPacket))
         {
             return false;
         }
@@ -1706,7 +1825,8 @@ bool ProteusIII_GPIOLocalWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uint
                 txPacket.Data[length] = 5;
                 txPacket.Data[length + 1] = configP->gpioId;
                 txPacket.Data[length + 2] = configP->function;
-                memcpy(&txPacket.Data[length + 3], &configP->value.pwm.period, 2);
+                uint16_t period = host_to_le16(configP->value.pwm.period);
+                memcpy(&txPacket.Data[length + 3], &period, 2);
                 txPacket.Data[length + 5] = configP->value.pwm.ratio;
                 length += 6;
                 break;
@@ -1722,8 +1842,7 @@ bool ProteusIII_GPIOLocalWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uint
     txPacket.Cmd = PROTEUSIII_CMD_GPIO_LOCAL_WRITECONFIG_REQ;
     txPacket.Length = length;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1742,8 +1861,7 @@ bool ProteusIII_GPIOLocalReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint1
     txPacket.Cmd = PROTEUSIII_CMD_GPIO_LOCAL_READCONFIG_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1805,6 +1923,7 @@ bool ProteusIII_GPIOLocalReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint1
                         configP_running->gpioId = *(uartP + 1);
                         configP_running->function = *(uartP + 2);
                         memcpy(&configP_running->value.pwm.period, (uartP + 3), 2);
+                        configP_running->value.pwm.period = host_from_le16(configP_running->value.pwm.period);
                         configP_running->value.pwm.ratio = *(uartP + 5);
 
                         configP_running++;
@@ -1847,8 +1966,7 @@ bool ProteusIII_GPIOLocalWrite(ProteusIII_GPIOControlBlock_t* controlP, uint16_t
     txPacket.Cmd = PROTEUSIII_CMD_GPIO_LOCAL_WRITE_REQ;
     txPacket.Length = length;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1869,8 +1987,7 @@ bool ProteusIII_GPIOLocalRead(uint8_t* gpioToReadP, uint8_t amountGPIOToRead, Pr
     txPacket.Data[0] = amountGPIOToRead;
     memcpy(&txPacket.Data[1], gpioToReadP, amountGPIOToRead);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1950,7 +2067,8 @@ bool ProteusIII_GPIORemoteWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uin
                 txPacket.Data[length] = 5;
                 txPacket.Data[length + 1] = configP->gpioId;
                 txPacket.Data[length + 2] = configP->function;
-                memcpy(&txPacket.Data[length + 3], &configP->value.pwm.period, 2);
+                uint16_t period = host_to_le16(configP->value.pwm.period);
+                memcpy(&txPacket.Data[length + 3], &period, 2);
                 txPacket.Data[length + 5] = configP->value.pwm.ratio;
                 length += 6;
                 break;
@@ -1964,8 +2082,7 @@ bool ProteusIII_GPIORemoteWriteConfig(ProteusIII_GPIOConfigBlock_t* configP, uin
     txPacket.Cmd = PROTEUSIII_CMD_GPIO_REMOTE_WRITECONFIG_REQ;
     txPacket.Length = length;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1984,8 +2101,7 @@ bool ProteusIII_GPIORemoteReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint
     txPacket.Cmd = PROTEUSIII_CMD_GPIO_REMOTE_READCONFIG_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -2047,6 +2163,7 @@ bool ProteusIII_GPIORemoteReadConfig(ProteusIII_GPIOConfigBlock_t* configP, uint
                         configP_running->gpioId = *(uartP + 1);
                         configP_running->function = *(uartP + 2);
                         memcpy(&configP_running->value.pwm.period, (uartP + 3), 2);
+                        configP_running->value.pwm.period = host_from_le16(configP_running->value.pwm.period);
                         configP_running->value.pwm.ratio = *(uartP + 5);
 
                         configP_running++;
@@ -2077,7 +2194,7 @@ bool ProteusIII_GPIORemoteWrite(ProteusIII_GPIOControlBlock_t* controlP, uint16_
     {
         txPacket.Data[length] = 2;
         txPacket.Data[length + 1] = controlP->gpioId;
-        txPacket.Data[length + 2] = controlP->value.ratio;
+        txPacket.Data[length + 2] = controlP->value.output;
         length += 3;
         controlP++;
     }
@@ -2085,8 +2202,7 @@ bool ProteusIII_GPIORemoteWrite(ProteusIII_GPIOControlBlock_t* controlP, uint16_
     txPacket.Cmd = PROTEUSIII_CMD_GPIO_REMOTE_WRITE_REQ;
     txPacket.Length = length;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -2107,8 +2223,7 @@ bool ProteusIII_GPIORemoteRead(uint8_t* gpioToReadP, uint8_t amountGPIOToRead, P
     txPacket.Data[0] = amountGPIOToRead;
     memcpy(&txPacket.Data[1], gpioToReadP, amountGPIOToRead);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -2126,7 +2241,7 @@ bool ProteusIII_GPIORemoteRead(uint8_t* gpioToReadP, uint8_t amountGPIOToRead, P
             if (*uartP == 2)
             {
                 controlP_running->gpioId = *(uartP + 1);
-                controlP_running->value.ratio = *(uartP + 2);
+                controlP_running->value.output = *(uartP + 2);
 
                 controlP_running++;
                 *numberOfControlsP += 1;
@@ -2149,8 +2264,7 @@ bool ProteusIII_GetBonds(ProteusIII_BondDatabase_t* bondDatabaseP)
     txPacket.Cmd = PROTEUSIII_CMD_GET_BONDS_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -2182,8 +2296,7 @@ bool ProteusIII_DeleteBonds()
     txPacket.Cmd = PROTEUSIII_CMD_DELETE_BONDS_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -2199,8 +2312,7 @@ bool ProteusIII_DeleteBond(uint8_t bondId)
     txPacket.Data[0] = bondId;
     txPacket.Data[1] = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -2214,8 +2326,7 @@ bool ProteusIII_AllowUnbondedConnections()
     txPacket.Cmd = PROTEUSIII_CMD_ALLOWUNBONDEDCONNECTIONS_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -2229,8 +2340,7 @@ bool ProteusIII_DTMEnable()
     txPacket.Cmd = PROTEUSIII_CMD_DTMSTART_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -2255,8 +2365,7 @@ bool ProteusIII_DTMRun(ProteusIII_DTMCommand_t command, uint8_t channel_vendorop
     txPacket.Data[2] = length_vendorcmd;
     txPacket.Data[3] = payload;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIII_Transparent_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIII_Command_Transmit(&txPacket))
     {
         return false;
     }

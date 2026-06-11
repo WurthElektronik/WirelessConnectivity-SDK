@@ -61,9 +61,27 @@
 
 #define ATCOMMAND_INTFLAGS_SIZE (uint16_t)(0x0F) /**< Mask for integer conversion flags concerning size */
 #define ATCOMMAND_INTFLAGS_SIZE8 (uint16_t)(1)   /**< 8 bit integer conversion flag */
-#define ATCOMMAND_INTFLAGS_SIZE16 (uint16_t)(2)  /**< 8 bit integer conversion flag */
-#define ATCOMMAND_INTFLAGS_SIZE32 (uint16_t)(4)  /**< 16 bit integer conversion flag */
-#define ATCOMMAND_INTFLAGS_SIZE64 (uint16_t)(8)  /**< 32 bit integer conversion flag */
+#define ATCOMMAND_INTFLAGS_SIZE16 (uint16_t)(2)  /**< 16 bit integer conversion flag */
+#define ATCOMMAND_INTFLAGS_SIZE32 (uint16_t)(4)  /**< 32 bit integer conversion flag */
+#define ATCOMMAND_INTFLAGS_SIZE64 (uint16_t)(8)  /**< 64 bit integer conversion flag */
+
+/* clang-format off */
+
+/**
+ * @brief Converts a type to an int flag to be parsed 
+ * using @ref ATCommands.h functions.
+ * 
+ * @param[in] type: Type of variable
+ * 
+ * @return Int flag that represents this type
+ */
+#define ATCOMMAND_TYPE_TO_INTFLAG_SIZE(type)             \
+    (sizeof(type) == 1 ? ATCOMMAND_INTFLAGS_SIZE8 :      \
+    sizeof(type) == 2 ? ATCOMMAND_INTFLAGS_SIZE16 :      \
+    sizeof(type) == 4 ? ATCOMMAND_INTFLAGS_SIZE32 :      \
+    sizeof(type) == 8 ? ATCOMMAND_INTFLAGS_SIZE64 : 0)
+
+/* clang-format on */
 
 #define ATCOMMAND_INTFLAGS_SIGN (uint16_t)(0x30)     /**< Mask for integer conversion flags concerning sign */
 #define ATCOMMAND_INTFLAGS_SIGNED (uint16_t)(0x10)   /**< Signed integer conversion flag */

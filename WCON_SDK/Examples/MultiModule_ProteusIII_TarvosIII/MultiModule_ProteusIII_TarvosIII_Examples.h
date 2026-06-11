@@ -33,10 +33,18 @@
 #ifndef MULTIMODULE_PROTEUSIII_TARVOSIII_EXAMPLES_H_INCLUDED
 #define MULTIMODULE_PROTEUSIII_TARVOSIII_EXAMPLES_H_INCLUDED
 
+#include <ProteusIII/ProteusIII.h>
+#include <TarvosIII/TarvosIII.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern ProteusIII_Pins_t MultiModule_ProteusIII_pins;
+extern WE_UART_t MultiModule_ProteusIII_uart;
+extern TarvosIII_Pins_t MultiModule_TarvosIII_pins;
+extern WE_UART_t MultiModule_TarvosIII_uart;
 
 extern void MultiModule_ProteusIII_TarvosIII_Examples(void);
 

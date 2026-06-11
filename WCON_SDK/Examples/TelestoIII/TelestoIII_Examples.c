@@ -29,26 +29,33 @@
  */
 
 #include <TelestoIII/TelestoIII.h>
+#include <TelestoIII/TelestoIII_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static TelestoIII_Pins_t TelestoIII_pins = {
-    .TelestoIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .TelestoIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+TelestoIII_Pins_t TelestoIII_pins = {
+    .TelestoIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .TelestoIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .TelestoIII_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .TelestoIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+    .TelestoIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t TelestoIII_uart;
+WE_UART_t TelestoIII_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /* Pick the example to be executed in the main function. */
 static void CommandModeExample();
@@ -90,9 +97,6 @@ void TelestoIII_Examples(void)
     TelestoIII_uart.baudrate = TELESTOIII_DEFAULT_BAUDRATE;
     TelestoIII_uart.flowControl = WE_FlowControl_NoFlowControl;
     TelestoIII_uart.parity = WE_Parity_None;
-    TelestoIII_uart.uartInit = WE_UART1_Init;
-    TelestoIII_uart.uartDeinit = WE_UART1_DeInit;
-    TelestoIII_uart.uartTransmit = WE_UART1_Transmit;
 
     CommandModeExample();
 }

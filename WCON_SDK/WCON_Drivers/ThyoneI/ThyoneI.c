@@ -574,9 +574,14 @@ bool ThyoneI_Reset()
     {
         return false;
     }
+    /* wait for cnf */
+    if (!Wait4CNF(CMD_WAIT_TIME, THYONEI_CMD_RESET_CNF, CMD_Status_Success, true))
+    {
+        return false;
+    }
 
     /* wait for cnf */
-    return Wait4CNF(CMD_WAIT_TIME, THYONEI_CMD_START_IND, CMD_Status_NoStatus, true);
+    return Wait4CNF(CMD_WAIT_TIME, THYONEI_CMD_START_IND, CMD_Status_NoStatus, false);
 }
 
 bool ThyoneI_Sleep()
@@ -766,8 +771,14 @@ bool ThyoneI_FactoryReset()
         return false;
     }
 
+    /* wait for cnf */
+    if (!Wait4CNF(CMD_WAIT_TIME, THYONEI_CMD_FACTORYRESET_CNF, CMD_Status_Success, true))
+    {
+        return false;
+    }
+
     /* wait for reset after factory reset */
-    return Wait4CNF(CMD_WAIT_TIME, THYONEI_CMD_START_IND, CMD_Status_NoStatus, true);
+    return Wait4CNF(CMD_WAIT_TIME, THYONEI_CMD_START_IND, CMD_Status_NoStatus, false);
 }
 
 bool ThyoneI_CheckNSet(ThyoneI_UserSettings_t userSetting, uint8_t* valueP, uint8_t length)

@@ -33,10 +33,15 @@
 #ifndef PROTEUSIII_EXAMPLES_H_INCLUDED
 #define PROTEUSIII_EXAMPLES_H_INCLUDED
 
+#include <ProteusIII/ProteusIII.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern ProteusIII_Pins_t ProteusIII_pins;
+extern WE_UART_t ProteusIII_uart;
 
 extern void ProteusIII_Examples(void);
 

@@ -57,9 +57,6 @@ int main(void)
     WE_Print_Init();
 #endif
 
-    /* add delay to not start the example too early, as flasher starts old code before it's actually flashed */
-    WE_Delay(5000);
-
     uint8_t driverVersion[3];
     WE_GetDriverVersion(driverVersion);
     WE_APP_PRINT("Wuerth Elektronik eiSos Wireless Connectivity SDK version %d.%d.%d\r\n", driverVersion[0], driverVersion[1], driverVersion[2]);
@@ -85,9 +82,13 @@ int main(void)
     //ThemistoI_Examples();
     //MultiModule_ProteusIII_TarvosIII_Examples();
     WE_APP_PRINT("*** End of execution ***\r\n");
+
+#if defined(WE_PLATFORM_STM32)
     while (1)
     {
         WE_Delay(5000);
     }
+#endif
+
     return 0;
 }

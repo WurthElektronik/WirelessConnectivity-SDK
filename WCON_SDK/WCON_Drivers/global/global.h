@@ -87,7 +87,7 @@ extern "C"
 /**
  * @brief Driver version
  */
-#define WE_WIRELESS_CONNECTIVITY_SDK_VERSION {2, 5, 0}
+#define WE_WIRELESS_CONNECTIVITY_SDK_VERSION {2, 5, 1}
 
 /**
  * @brief Request the 3 byte driver version

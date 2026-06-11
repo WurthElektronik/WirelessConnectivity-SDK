@@ -29,27 +29,34 @@
  */
 
 #include <ThyoneI/ThyoneI.h>
+#include <ThyoneI/ThyoneI_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static ThyoneI_Pins_t ThyoneI_pins = {
-    .ThyoneI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .ThyoneI_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
-    .ThyoneI_Pin_Busy = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_6)),
-    .ThyoneI_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
+ThyoneI_Pins_t ThyoneI_pins = {
+    .ThyoneI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .ThyoneI_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
+    .ThyoneI_Pin_Busy = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
+    .ThyoneI_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
     .ThyoneI_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t ThyoneI_uart;
+WE_UART_t ThyoneI_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief Callback called when data has been received via radio
@@ -210,9 +217,6 @@ void ThyoneI_Examples(void)
     ThyoneI_uart.baudrate = THYONEI_DEFAULT_BAUDRATE;
     ThyoneI_uart.flowControl = WE_FlowControl_NoFlowControl;
     ThyoneI_uart.parity = WE_Parity_None;
-    ThyoneI_uart.uartInit = WE_UART1_Init;
-    ThyoneI_uart.uartDeinit = WE_UART1_DeInit;
-    ThyoneI_uart.uartTransmit = WE_UART1_Transmit;
 
     Example_CommandMode_DataTransmission();
     //Example_TransparentMode_DataTransmission();

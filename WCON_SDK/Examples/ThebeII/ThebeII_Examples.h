@@ -33,10 +33,15 @@
 #ifndef THEBEII_EXAMPLES_H_INCLUDED
 #define THEBEII_EXAMPLES_H_INCLUDED
 
+#include <ThebeII/ThebeII.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern ThebeII_Pins_t ThebeII_pins;
+extern WE_UART_t ThebeII_uart;
 
 extern void ThebeII_Examples(void);
 

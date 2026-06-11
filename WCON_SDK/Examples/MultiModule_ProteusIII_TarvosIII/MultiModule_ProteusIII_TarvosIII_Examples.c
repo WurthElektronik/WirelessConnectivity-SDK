@@ -28,6 +28,7 @@
  * @brief MultiModule_ProteusIII_TarvosIII_Examples example.
  */
 
+#include <MultiModule_ProteusIII_TarvosIII/MultiModule_ProteusIII_TarvosIII_Examples.h>
 #include <ProteusIII/ProteusIII.h>
 #include <TarvosIII/TarvosIII.h>
 #include <global/global.h>
@@ -56,31 +57,54 @@ static void ProteusIII_ChannelOpenCallback(uint8_t* btMac, uint16_t maxPayload);
 
 static void TarvosIII_RxCallback(uint8_t* payload, uint8_t payload_length, uint8_t dest_network_id, uint8_t dest_address_lsb, uint8_t dest_address_msb, int8_t rssi);
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the uart and pins of Proteus-III
  */
-static ProteusIII_Pins_t ProteusIII_pins = {
-    .ProteusIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .ProteusIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+ProteusIII_Pins_t MultiModule_ProteusIII_pins = {
+    .ProteusIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .ProteusIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .ProteusIII_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .ProteusIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
-    .ProteusIII_Pin_Busy = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_8)),
-    .ProteusIII_Pin_StatusLed2 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_9)),
+    .ProteusIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
+    .ProteusIII_Pin_Busy = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+    .ProteusIII_Pin_StatusLed2 = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_1)),
 };
 
-static WE_UART_t ProteusIII_uart;
+WE_UART_t MultiModule_ProteusIII_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
 
 /**
  * @brief Definition of the uart and pins of Tarvos-III
  */
-static TarvosIII_Pins_t TarvosIII_pins = {
-    .TarvosIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_11)),
-    .TarvosIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_12)),
-    .TarvosIII_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_1)),
-    .TarvosIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_4)),
+TarvosIII_Pins_t MultiModule_TarvosIII_pins = {
+    .TarvosIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_12)),
+    .TarvosIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_15)),
+    .TarvosIII_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+    .TarvosIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_1)),
 };
 
-static WE_UART_t TarvosIII_uart;
+WE_UART_t MultiModule_TarvosIII_uart = {
+#if defined(STM32L073xx)
+    .uartInit = WE_UART4_Init,
+    .uartDeinit = WE_UART4_DeInit,
+    .uartTransmit = WE_UART4_Transmit,
+#elif defined(STM32F401xE)
+    .uartInit = WE_UART6_Init,
+    .uartDeinit = WE_UART6_DeInit,
+    .uartTransmit = WE_UART6_Transmit,
+#elif defined(STM32F446xx)
+    .uartInit = WE_UART3_Init,
+    .uartDeinit = WE_UART3_DeInit,
+    .uartTransmit = WE_UART3_Transmit,
+#else
+#error "Error: No chipset selected"
+#endif
+};
+
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief Function to init data storage to buffer data between the two modules
@@ -181,12 +205,9 @@ void MultiModule_ProteusIII_TarvosIII_Examples(void)
     DataStorage_Init(Tarvos2ProteusBuffer);
     DataStorage_Init(Proteus2TarvosBuffer);
 
-    ProteusIII_uart.baudrate = PROTEUSIII_DEFAULT_BAUDRATE;
-    ProteusIII_uart.flowControl = WE_FlowControl_NoFlowControl;
-    ProteusIII_uart.parity = WE_Parity_None;
-    ProteusIII_uart.uartInit = WE_UART1_Init;
-    ProteusIII_uart.uartDeinit = WE_UART1_DeInit;
-    ProteusIII_uart.uartTransmit = WE_UART1_Transmit;
+    MultiModule_ProteusIII_uart.baudrate = PROTEUSIII_DEFAULT_BAUDRATE;
+    MultiModule_ProteusIII_uart.flowControl = WE_FlowControl_NoFlowControl;
+    MultiModule_ProteusIII_uart.parity = WE_Parity_None;
 
     ProteusIII_CallbackConfig_t callbackConfig = {0};
     callbackConfig.rxCb = ProteusIII_RxCallback;
@@ -194,26 +215,16 @@ void MultiModule_ProteusIII_TarvosIII_Examples(void)
     callbackConfig.disconnectCb = ProteusIII_DisconnectCallback;
     callbackConfig.channelOpenCb = ProteusIII_ChannelOpenCallback;
 
-    TarvosIII_uart.baudrate = TARVOSIII_DEFAULT_BAUDRATE;
-    TarvosIII_uart.flowControl = WE_FlowControl_NoFlowControl;
-    TarvosIII_uart.parity = WE_Parity_None;
+    MultiModule_TarvosIII_uart.baudrate = TARVOSIII_DEFAULT_BAUDRATE;
+    MultiModule_TarvosIII_uart.flowControl = WE_FlowControl_NoFlowControl;
+    MultiModule_TarvosIII_uart.parity = WE_Parity_None;
 
-#if defined(STM32L073xx)
-    TarvosIII_uart.uartInit = WE_UART4_Init;
-    TarvosIII_uart.uartDeinit = WE_UART4_DeInit;
-    TarvosIII_uart.uartTransmit = WE_UART4_Transmit;
-#elif defined(STM32F401xE)
-    TarvosIII_uart.uartInit = WE_UART6_Init;
-    TarvosIII_uart.uartDeinit = WE_UART6_DeInit;
-    TarvosIII_uart.uartTransmit = WE_UART6_Transmit;
-#endif
-
-    if (false == ProteusIII_Init(&ProteusIII_uart, &ProteusIII_pins, ProteusIII_OperationMode_CommandMode, callbackConfig))
+    if (false == ProteusIII_Init(&MultiModule_ProteusIII_uart, &MultiModule_ProteusIII_pins, ProteusIII_OperationMode_CommandMode, callbackConfig))
     {
         WE_APP_PRINT("Initialization error\r\n");
         return;
     }
-    if (false == TarvosIII_Init(&TarvosIII_uart, &TarvosIII_pins, TarvosIII_AddressMode_0, TarvosIII_RxCallback))
+    if (false == TarvosIII_Init(&MultiModule_TarvosIII_uart, &MultiModule_TarvosIII_pins, TarvosIII_AddressMode_0, TarvosIII_RxCallback))
     {
         WE_APP_PRINT("Initialization error\r\n");
         return;

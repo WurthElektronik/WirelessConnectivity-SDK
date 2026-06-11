@@ -33,10 +33,15 @@
 #ifndef PROTEUSIV_EXAMPLES_H_INCLUDED
 #define PROTEUSIV_EXAMPLES_H_INCLUDED
 
+#include <ProteusIV/ProteusIV.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern ProteusIV_Pins_t ProteusIV_pins;
+extern WE_UART_t ProteusIV_uart;
 
 extern void ProteusIV_Examples(void);
 

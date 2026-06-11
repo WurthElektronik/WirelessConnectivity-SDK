@@ -126,6 +126,10 @@ bool ATCommand_StringToInt(void* number, const char* inString, uint16_t intFlags
         {
             *((int64_t*)number) = longNr;
         }
+        else
+        {
+            return false;
+        }
     }
     else
     {
@@ -154,6 +158,10 @@ bool ATCommand_StringToInt(void* number, const char* inString, uint16_t intFlags
         else if ((intFlags & ATCOMMAND_INTFLAGS_SIZE64) != 0)
         {
             *((uint64_t*)number) = longNr;
+        }
+        else
+        {
+            return false;
         }
     }
 

@@ -33,6 +33,7 @@
 #ifndef DAPHNISI_EXAMPLES_H_INCLUDED
 #define DAPHNISI_EXAMPLES_H_INCLUDED
 
+#include <DaphnisI/ATCommands/ATDevice.h>
 #include <DaphnisI/ATCommands/ATUserSettings.h>
 #include <DaphnisI/DaphnisI.h>
 #include <print.h>

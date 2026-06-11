@@ -37,8 +37,10 @@
 
 #if defined(STM32L073xx)
 #include "global_L0xx.h"
-#elif defined(STM32F401xE)
+#elif defined(STM32F401xE) || defined(STM32F446xx)
 #include "global_F4xx.h"
+#else
+#error "Error: No chipset selected"
 #endif
 
 /**
@@ -50,6 +52,11 @@
  * @brief Priority for (asynchronous) processing of data received from radio module.
  */
 #define WE_PRIORITY_RX_DATA_PROCESSING 1
+
+/**
+ * @brief Specifies the the platform that this header file supports.
+ */
+#define WE_PLATFORM_STM32
 
 /**
  * @brief Configuration of a STM32 pin.

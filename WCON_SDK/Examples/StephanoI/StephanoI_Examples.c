@@ -44,18 +44,24 @@
  */
 bool StephanoI_Examples_startupEventReceived = false;
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the uart
  */
-WE_UART_t StephanoI_uart;
+WE_UART_t StephanoI_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
 
 /**
  * @brief Definition of the control pins
  */
 StephanoI_Pins_t StephanoI_pins = {
-    .StephanoI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .StephanoI_Pin_Wakeup = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_5)),
+    .StephanoI_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .StephanoI_Pin_Wakeup = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
 };
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief Waits for the startup event to be received.
@@ -80,9 +86,6 @@ void StephanoI_Examples(void)
     StephanoI_uart.baudrate = STEPHANOI_DEFAULT_BAUDRATE;
     StephanoI_uart.flowControl = WE_FlowControl_NoFlowControl;
     StephanoI_uart.parity = WE_Parity_None;
-    StephanoI_uart.uartInit = WE_UART1_Init;
-    StephanoI_uart.uartDeinit = WE_UART1_DeInit;
-    StephanoI_uart.uartTransmit = WE_UART1_Transmit;
 
     /* The example to be started can be picked from the list below by calling the corresponding function. */
 

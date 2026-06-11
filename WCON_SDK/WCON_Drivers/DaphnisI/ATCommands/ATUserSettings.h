@@ -68,7 +68,7 @@ typedef enum DaphnisI_P2P_Encryption_Mode_t
     DaphnisI_P2P_Encryption_Mode_None = 0x0,
     DaphnisI_P2P_Encryption_Mode_TX = 0x1,
     DaphnisI_P2P_Encryption_Mode_RX = 0x2,
-    DaphnisI_P2P_Encryption_Mode = 0x3,
+    DaphnisI_P2P_Encryption_Mode_TX_RX = 0x3,
 } DaphnisI_P2P_Encryption_Mode_t;
 
 #define DAPHNISI_P2P_ENCRYPTION_KEY_LENGTH 16

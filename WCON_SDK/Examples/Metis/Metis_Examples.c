@@ -29,6 +29,7 @@
  */
 
 #include <Metis/Metis.h>
+#include <Metis/Metis_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
@@ -87,17 +88,23 @@ static uint8_t APP_Data[140] = {0x48, /* Length Field */
 
                                 0x2F, 0x2F};
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
 Metis_Pins_t Metis_pins = {
-    .Metis_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
+    .Metis_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
 };
 
 /**
  * @brief Definition of the uart
  */
-WE_UART_t Metis_uart;
+WE_UART_t Metis_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /**
  * @brief Prints the supplied string, prefixed with OK or NOK (depending on the success parameter).
@@ -133,9 +140,6 @@ void Metis_Examples(void)
     Metis_uart.baudrate = METIS_DEFAULT_BAUDRATE;
     Metis_uart.flowControl = WE_FlowControl_NoFlowControl;
     Metis_uart.parity = WE_Parity_None;
-    Metis_uart.uartInit = WE_UART1_Init;
-    Metis_uart.uartDeinit = WE_UART1_DeInit;
-    Metis_uart.uartTransmit = WE_UART1_Transmit;
 
     CommandModeExample();
 }

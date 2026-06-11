@@ -30,25 +30,32 @@
  */
 
 #include <MetisE/MetisE.h>
+#include <MetisE/MetisE_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static MetisE_Pins_t MetisE_pins = {
-    .MetisE_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .MetisE_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+MetisE_Pins_t MetisE_pins = {
+    .MetisE_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .MetisE_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .MetisE_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t MetisE_uart;
+WE_UART_t MetisE_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /* Pick the example to be executed in the main function. */
 static void MeterExample();
@@ -95,9 +102,6 @@ void MetisE_Examples(void)
     MetisE_uart.baudrate = METIS_E_DEFAULT_BAUDRATE;
     MetisE_uart.flowControl = WE_FlowControl_NoFlowControl;
     MetisE_uart.parity = WE_Parity_None;
-    MetisE_uart.uartInit = WE_UART1_Init;
-    MetisE_uart.uartDeinit = WE_UART1_DeInit;
-    MetisE_uart.uartTransmit = WE_UART1_Transmit;
 
     if (false == MetisE_Init(&MetisE_uart, &MetisE_pins, RxCallback))
     {
@@ -109,7 +113,7 @@ void MetisE_Examples(void)
     /* reset module */
     if (!MetisE_PinReset())
     {
-        WE_APP_PRINT("Pin reset failed\n");
+        WE_APP_PRINT("Pin reset failed\r\n");
         MetisE_Deinit();
         return;
     }

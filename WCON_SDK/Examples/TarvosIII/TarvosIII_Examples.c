@@ -29,26 +29,33 @@
  */
 
 #include <TarvosIII/TarvosIII.h>
+#include <TarvosIII/TarvosIII_Examples.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <print.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
-static TarvosIII_Pins_t TarvosIII_pins = {
-    .TarvosIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .TarvosIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
+TarvosIII_Pins_t TarvosIII_pins = {
+    .TarvosIII_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .TarvosIII_Pin_SleepWakeUp = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
     .TarvosIII_Pin_Boot = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .TarvosIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+    .TarvosIII_Pin_Mode = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
 };
 
 /**
  * @brief Definition of the uart
  */
-static WE_UART_t TarvosIII_uart;
+WE_UART_t TarvosIII_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 /* Pick the example to be executed in the main function. */
 static void CommandModeExample();
@@ -87,9 +94,6 @@ void TarvosIII_Examples(void)
     TarvosIII_uart.baudrate = TARVOSIII_DEFAULT_BAUDRATE;
     TarvosIII_uart.flowControl = WE_FlowControl_NoFlowControl;
     TarvosIII_uart.parity = WE_Parity_None;
-    TarvosIII_uart.uartInit = WE_UART1_Init;
-    TarvosIII_uart.uartDeinit = WE_UART1_DeInit;
-    TarvosIII_uart.uartTransmit = WE_UART1_Transmit;
 
     CommandModeExample();
 }

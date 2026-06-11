@@ -31,26 +31,33 @@
 #include <Skoll_I/Skoll_I.h>
 #include <Skoll_I/Skoll_I_BluetoothClassic_Examples.h>
 #include <Skoll_I/Skoll_I_BluetoothLE_Examples.h>
+#include <Skoll_I/Skoll_I_Examples.h>
 #include <Skoll_I/Skoll_I_Examples_handler.h>
 #include <global/global.h>
 #include <global_platform.h>
 #include <stdio.h>
 #include <string.h>
 
+#if defined(WE_PLATFORM_STM32)
 /**
  * @brief Definition of the pins
  */
 Skoll_I_Pins_t Skoll_I_pins = {
-    .Skoll_I_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_10)),
-    .Skoll_I_Pin_SPP = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
-    .Skoll_I_Pin_Connection = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_9)),
-    .Skoll_I_Pin_Role = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_8)),
+    .Skoll_I_Pin_Reset = WE_PIN((void*)&WE_STM32_PIN(GPIOC, GPIO_PIN_9)),
+    .Skoll_I_Pin_SPP = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_12)),
+    .Skoll_I_Pin_Connection = WE_PIN((void*)&WE_STM32_PIN(GPIOA, GPIO_PIN_7)),
+    .Skoll_I_Pin_Role = WE_PIN((void*)&WE_STM32_PIN(GPIOB, GPIO_PIN_2)),
 };
 
 /**
  * @brief Definition of the uart
  */
-WE_UART_t Skoll_I_uart;
+WE_UART_t Skoll_I_uart = {
+    .uartInit = WE_UART1_Init,
+    .uartDeinit = WE_UART1_DeInit,
+    .uartTransmit = WE_UART1_Transmit,
+};
+#endif /* defined(WE_PLATFORM_STM32) */
 
 static void Test_Compiler_Packing();
 static void Test_System();
@@ -71,9 +78,6 @@ void Skoll_I_Examples(void)
     Skoll_I_uart.flowControl = WE_FlowControl_RTSAndCTS;
 #endif
     Skoll_I_uart.parity = WE_Parity_None;
-    Skoll_I_uart.uartInit = WE_UART1_Init;
-    Skoll_I_uart.uartDeinit = WE_UART1_DeInit;
-    Skoll_I_uart.uartTransmit = WE_UART1_Transmit;
 
 #if 0
     /* reset */

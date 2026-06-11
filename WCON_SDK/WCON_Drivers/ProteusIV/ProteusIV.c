@@ -28,6 +28,7 @@
  */
 
 #include <ProteusIV/ProteusIV.h>
+#include <global/endian_utils.h>
 #include <global/global.h>
 #include <stdio.h>
 #include <string.h>
@@ -156,6 +157,14 @@ typedef struct
 #define PROTEUSIV_CMD_CONNECTIONINFO_REQ (PROTEUSIV_CMD_CONNECTIONINFO | PROTEUSIV_CMD_FLAG_REQ)
 #define PROTEUSIV_CMD_CONNECTIONINFO_CNF (PROTEUSIV_CMD_CONNECTIONINFO | PROTEUSIV_CMD_FLAG_CNF)
 
+#define PROTEUSIV_CONN_STATE_ADVERTISING_BIT 0
+#define PROTEUSIV_CONN_STATE_SCANNING_BIT 1
+#define PROTEUSIV_CONN_STATE_CONNECTED_BIT 2
+#define PROTEUSIV_CONN_STATE_PERIPHERAL_LINK_OPEN_BIT 3
+#define PROTEUSIV_CONN_STATE_CENTRAL_LINK_OPEN_BIT 4
+
+#define BIT_VALUE(byte, bit_position) ((byte & (1u << bit_position)) ? 1u : 0u)
+
 /**
  * @brief Type used to check the response, when a command was sent to the Proteus-IV
  */
@@ -217,6 +226,36 @@ static uint8_t rxBuffer[sizeof(ProteusIV_CMD_Frame_t)]; /* For UART RX from modu
  *         Static functions           *
  **************************************/
 
+/**
+ * @brief Fills the checksum and transmits the command over UART.
+ *
+ * @param[in] commandP: Pointer to the command frame.
+ *
+ * @return true if transmission succeeded,
+ *         false otherwise
+ */
+static bool ProteusIV_Command_Transmit(ProteusIV_CMD_Frame_t* commandP)
+{
+    if ((commandP == NULL))
+    {
+        return false;
+    }
+
+    uint16_t command_length = commandP->Length;
+
+    commandP->Length = host_to_le16(command_length);
+
+    uint8_t checksum = (uint8_t)commandP->Stx;
+    uint8_t* pArray = (uint8_t*)commandP;
+    for (uint16_t i = 1; i < (command_length + LENGTH_CMD_OVERHEAD_WITHOUT_CRC); i++)
+    {
+        checksum ^= pArray[i];
+    }
+    commandP->Data[command_length] = checksum;
+
+    return ProteusIV_uartP->uartTransmit((uint8_t*)commandP, command_length + LENGTH_CMD_OVERHEAD);
+}
+
 static void ResetConnectionList()
 {
     for (int conn_ID = 0; conn_ID < PROTEUSIV_MAX_NUMBER_OF_CONNECTEDDEVICES; conn_ID++)
@@ -245,8 +284,10 @@ static void HandleRxPacket(uint8_t* prxBuffer)
     cmdConfirmation.cmd = CNFINVALID;
     cmdConfirmation.status = CMD_Status_Invalid;
 
-    uint16_t cmdLength = ((ProteusIV_CMD_Frame_t*)prxBuffer)->Length;
+    uint16_t cmdLength = host_to_le16(((ProteusIV_CMD_Frame_t*)prxBuffer)->Length);
     memcpy(&rxPacket, prxBuffer, cmdLength + LENGTH_CMD_OVERHEAD);
+
+    rxPacket.Length = cmdLength;
 
     switch (rxPacket.Cmd)
     {
@@ -271,7 +312,9 @@ static void HandleRxPacket(uint8_t* prxBuffer)
                     memcpy(&ProteusIV_ConnectedDevicesP->devices[i].btMac[0], &rxPacket.Data[len + 2], PROTEUSIV_BTMAC_LENGTH);
                     ProteusIV_ConnectedDevicesP->devices[i].is_linkopen = (rxPacket.Data[len + 8] == 0x01);
                     memcpy(&ProteusIV_ConnectedDevicesP->devices[i].max_payload, &rxPacket.Data[len + 9], 2);
+                    ProteusIV_ConnectedDevicesP->devices[i].max_payload = host_from_le16(ProteusIV_ConnectedDevicesP->devices[i].max_payload);
                     memcpy(&ProteusIV_ConnectedDevicesP->devices[i].connection_interval, &rxPacket.Data[len + 11], 2);
+                    ProteusIV_ConnectedDevicesP->devices[i].connection_interval = host_from_le16(ProteusIV_ConnectedDevicesP->devices[i].connection_interval);
                     ProteusIV_ConnectedDevicesP->devices[i].phy_rx = rxPacket.Data[len + 13];
                     ProteusIV_ConnectedDevicesP->devices[i].phy_tx = rxPacket.Data[len + 14];
                     len += 15;
@@ -662,21 +705,6 @@ static ProteusIV_CMD_Status_t Wait4CNF(uint32_t maxTimeMs, uint8_t expectedCmdCo
     return CMD_Status_Invalid;
 }
 
-/**
- * @brief Function to add the checksum at the end of the data packet.
- */
-static bool FillChecksum(ProteusIV_CMD_Frame_t* cmd)
-{
-    uint8_t checksum = (uint8_t)cmd->Stx;
-    uint8_t* pArray = (uint8_t*)cmd;
-    for (uint16_t i = 1; i < (cmd->Length + LENGTH_CMD_OVERHEAD_WITHOUT_CRC); i++)
-    {
-        checksum ^= pArray[i];
-    }
-    cmd->Data[cmd->Length] = checksum;
-    return true;
-}
-
 bool ProteusIV_Internal_Transmit(const uint8_t* data, uint16_t dataLength)
 {
     if ((data == NULL) || (dataLength == 0))
@@ -884,8 +912,7 @@ bool ProteusIV_Reset()
     txPacket.Cmd = PROTEUSIV_CMD_RESET_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -933,8 +960,7 @@ bool ProteusIV_Disconnect(uint8_t conn_ID)
     txPacket.Length = 1;
     txPacket.Data[0] = conn_ID;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -953,8 +979,7 @@ bool ProteusIV_Sleep()
     txPacket.Cmd = PROTEUSIV_CMD_SLEEP_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -973,8 +998,7 @@ bool ProteusIV_UartDisable()
     txPacket.Cmd = PROTEUSIV_CMD_UARTDISABLE_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -999,8 +1023,7 @@ bool ProteusIV_Transmit(uint8_t conn_ID, uint8_t* payloadP, uint16_t length)
     txPacket.Data[0] = conn_ID;
     memcpy(&txPacket.Data[1], payloadP, length);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1018,8 +1041,7 @@ bool ProteusIV_FactoryReset()
     txPacket.Cmd = PROTEUSIV_CMD_FACTORYRESET_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1049,8 +1071,7 @@ bool ProteusIV_Set(ProteusIV_UserSettings_t userSetting, uint8_t* valueP, uint8_
     txPacket.Data[0] = userSetting;
     memcpy(&txPacket.Data[1], valueP, length);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1089,15 +1110,22 @@ bool ProteusIV_SetDeviceName(uint8_t* deviceNameP, uint8_t nameLength) { return 
 
 bool ProteusIV_SetCFGFlags(uint16_t cfgFlags)
 {
+    cfgFlags = host_to_le16(cfgFlags);
     uint8_t help[2];
     memcpy(help, (uint8_t*)&cfgFlags, 2);
     return ProteusIV_Set(ProteusIV_USERSETTING_CFG_FLAGS, help, 2);
 }
 
-bool ProteusIV_SetTXPower(ProteusIV_TXPower_t txPower) { return ProteusIV_Set(ProteusIV_USERSETTING_RF_TXPOWER, (uint8_t*)&txPower, 1); }
+bool ProteusIV_SetTXPower(ProteusIV_TXPower_t txPower)
+{
+    uint8_t tx_power = txPower;
+    return ProteusIV_Set(ProteusIV_USERSETTING_RF_TXPOWER, &tx_power, 1);
+}
 
 bool ProteusIV_SetAdvertisingInterval(uint16_t min, uint16_t max)
 {
+    min = host_to_le16(min);
+    max = host_to_le16(max);
     uint8_t help[4];
     memcpy(&help[0], (uint8_t*)&min, 2);
     memcpy(&help[2], (uint8_t*)&max, 2);
@@ -1106,6 +1134,8 @@ bool ProteusIV_SetAdvertisingInterval(uint16_t min, uint16_t max)
 
 bool ProteusIV_SetConnectionInterval(uint16_t min, uint16_t max)
 {
+    min = host_to_le16(min);
+    max = host_to_le16(max);
     uint8_t help[4];
     memcpy(&help[0], (uint8_t*)&min, 2);
     memcpy(&help[2], (uint8_t*)&max, 2);
@@ -1114,11 +1144,23 @@ bool ProteusIV_SetConnectionInterval(uint16_t min, uint16_t max)
 
 bool ProteusIV_SetETXConfig(uint8_t etxconfig) { return ProteusIV_Set(ProteusIV_USERSETTING_UART_TRANSP_ETX_CFG, &etxconfig, 1); }
 
-bool ProteusIV_SetReceiveETX(uint16_t etx) { return ProteusIV_Set(ProteusIV_USERSETTING_UART_RECEIVE_TRANSP_ETX, (uint8_t*)&etx, 2); }
+bool ProteusIV_SetReceiveETX(uint16_t etx)
+{
+    etx = host_to_le16(etx);
+    return ProteusIV_Set(ProteusIV_USERSETTING_UART_RECEIVE_TRANSP_ETX, (uint8_t*)&etx, 2);
+}
 
-bool ProteusIV_SetTransmitETX(uint16_t etx) { return ProteusIV_Set(ProteusIV_USERSETTING_UART_TRANSMIT_TRANSP_ETX, (uint8_t*)&etx, 2); }
+bool ProteusIV_SetTransmitETX(uint16_t etx)
+{
+    etx = host_to_le16(etx);
+    return ProteusIV_Set(ProteusIV_USERSETTING_UART_TRANSMIT_TRANSP_ETX, (uint8_t*)&etx, 2);
+}
 
-bool ProteusIV_SetSecFlags(ProteusIV_SecFlags_t secFlags) { return ProteusIV_Set(ProteusIV_USERSETTING_RF_SECFLAGS, (uint8_t*)&secFlags, 1); }
+bool ProteusIV_SetSecFlags(ProteusIV_SecFlags_t secFlags)
+{
+    uint8_t sec_flags = secFlags;
+    return ProteusIV_Set(ProteusIV_USERSETTING_RF_SECFLAGS, &sec_flags, 1);
+}
 
 bool ProteusIV_SetMaxPeripheralConnections(uint8_t max) { return ProteusIV_Set(ProteusIV_USERSETTING_RF_MAXPERIPHERALCONNECTIONS, (uint8_t*)&max, 1); }
 
@@ -1147,6 +1189,7 @@ bool ProteusIV_SetStaticPasskey(uint8_t* staticPasskeyP) { return ProteusIV_Set(
 
 bool ProteusIV_SetAppearance(uint16_t appearance)
 {
+    appearance = host_to_le16(appearance);
     uint8_t help[2];
     memcpy(help, (uint8_t*)&appearance, 2);
     return ProteusIV_Set(ProteusIV_USERSETTING_RF_APPEARANCE, help, 2);
@@ -1173,8 +1216,7 @@ bool ProteusIV_Get(ProteusIV_UserSettings_t userSetting, uint8_t* responseP, uin
     txPacket.Length = 1;
     txPacket.Data[0] = userSetting;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1219,9 +1261,17 @@ bool ProteusIV_GetDeviceInfo(ProteusIV_DeviceInfo_t* deviceInfoP)
     }
     deviceInfoP->osVersion = 0;
     memcpy(&deviceInfoP->osVersion, help, 3);
+    deviceInfoP->osVersion = host_from_le32(deviceInfoP->osVersion);
+
     memcpy(&deviceInfoP->buildCode, help + 3, 4);
+    deviceInfoP->buildCode = host_from_le32(deviceInfoP->buildCode);
+
     memcpy(&deviceInfoP->packageVariant, help + 7, 2);
+    deviceInfoP->packageVariant = host_from_le16(deviceInfoP->packageVariant);
+
     memcpy(&deviceInfoP->chipId, help + 9, 4);
+    deviceInfoP->chipId = host_from_le32(deviceInfoP->chipId);
+
     return true;
 }
 
@@ -1246,13 +1296,43 @@ bool ProteusIV_GetMAC(uint8_t* macP)
 bool ProteusIV_GetBTMAC(uint8_t* btMacP)
 {
     uint16_t length = PROTEUSIV_BTMAC_LENGTH;
-    return ProteusIV_Get(ProteusIV_USERSETTING_FS_BTMAC, btMacP, &length);
+    if (!ProteusIV_Get(ProteusIV_USERSETTING_FS_BTMAC, btMacP, &length))
+    {
+        return false;
+    }
+
+    uint8_t default_mac[PROTEUSIV_BTMAC_LENGTH] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    if (0 != memcmp(default_mac, btMacP, PROTEUSIV_BTMAC_LENGTH))
+    {
+        /* MAC is not default */
+        return true;
+    }
+
+    /* create MAC by reading serial number */
+    btMacP[5] = 0x00;
+    btMacP[4] = 0x18;
+    btMacP[3] = 0xDA;
+    return ProteusIV_GetSerialNumber(btMacP);
 }
 
 bool ProteusIV_GetTXPower(ProteusIV_TXPower_t* txPowerP)
 {
+    if (txPowerP == NULL)
+    {
+        return false;
+    }
+
+    uint8_t tx_power;
     uint16_t length = 1;
-    return ProteusIV_Get(ProteusIV_USERSETTING_RF_TXPOWER, (uint8_t*)txPowerP, &length);
+
+    if (!ProteusIV_Get(ProteusIV_USERSETTING_RF_TXPOWER, &tx_power, &length))
+    {
+        return false;
+    }
+
+    *txPowerP = tx_power;
+
+    return true;
 }
 
 bool ProteusIV_GetAdvertisingInterval(uint16_t* minP, uint16_t* maxP)
@@ -1267,7 +1347,9 @@ bool ProteusIV_GetAdvertisingInterval(uint16_t* minP, uint16_t* maxP)
     if (true == ProteusIV_Get(ProteusIV_USERSETTING_RF_ADVERTISINGINTERVAL, help, &length))
     {
         memcpy((uint8_t*)minP, &help[0], 2);
+        *minP = host_from_le16(*minP);
         memcpy((uint8_t*)maxP, &help[2], 2);
+        *maxP = host_from_le16(*maxP);
         return true;
     }
     return false;
@@ -1285,7 +1367,9 @@ bool ProteusIV_GetConnectionInterval(uint16_t* minP, uint16_t* maxP)
     if (true == ProteusIV_Get(ProteusIV_USERSETTING_RF_CONNECTIONINTERVAL, help, &length))
     {
         memcpy((uint8_t*)minP, &help[0], 2);
+        *minP = host_from_le16(*minP);
         memcpy((uint8_t*)maxP, &help[2], 2);
+        *maxP = host_from_le16(*maxP);
         return true;
     }
     return false;
@@ -1299,20 +1383,62 @@ bool ProteusIV_GetETXConfig(uint8_t* etxconfigP)
 
 bool ProteusIV_GetReceiveETX(uint16_t* etxP)
 {
+    if (etxP == NULL)
+    {
+        return false;
+    }
+
+    uint8_t help[2];
     uint16_t length = 2;
-    return ProteusIV_Get(ProteusIV_USERSETTING_UART_RECEIVE_TRANSP_ETX, (uint8_t*)etxP, &length);
+
+    if (!ProteusIV_Get(ProteusIV_USERSETTING_UART_RECEIVE_TRANSP_ETX, help, &length))
+    {
+        return false;
+    }
+
+    memcpy((uint8_t*)etxP, help, 2);
+    *etxP = host_from_le16(*etxP);
+    return true;
 }
 
 bool ProteusIV_GetTransmitETX(uint16_t* etxP)
 {
+    if (etxP == NULL)
+    {
+        return false;
+    }
+
+    uint8_t help[2];
     uint16_t length = 2;
-    return ProteusIV_Get(ProteusIV_USERSETTING_UART_TRANSMIT_TRANSP_ETX, (uint8_t*)etxP, &length);
+
+    if (!ProteusIV_Get(ProteusIV_USERSETTING_UART_TRANSMIT_TRANSP_ETX, help, &length))
+    {
+        return false;
+    }
+
+    memcpy((uint8_t*)etxP, help, 2);
+    *etxP = host_from_le16(*etxP);
+    return true;
 }
 
 bool ProteusIV_GetSecFlags(ProteusIV_SecFlags_t* secFlagsP)
 {
+    if (secFlagsP == NULL)
+    {
+        return false;
+    }
+
+    uint8_t sec_flags;
     uint16_t length = 1;
-    return ProteusIV_Get(ProteusIV_USERSETTING_RF_SECFLAGS, (uint8_t*)secFlagsP, &length);
+
+    if (!ProteusIV_Get(ProteusIV_USERSETTING_RF_SECFLAGS, &sec_flags, &length))
+    {
+        return false;
+    }
+
+    *secFlagsP = sec_flags;
+
+    return true;
 }
 
 bool ProteusIV_GetMaxPeripheralConnections(uint8_t* maxP)
@@ -1383,6 +1509,7 @@ bool ProteusIV_GetAppearance(uint16_t* appearanceP)
     if (ProteusIV_Get(ProteusIV_USERSETTING_RF_APPEARANCE, help, &length))
     {
         memcpy((uint8_t*)appearanceP, help, 2);
+        *appearanceP = host_from_le16(*appearanceP);
         return true;
     }
 
@@ -1424,6 +1551,7 @@ bool ProteusIV_GetCFGFlags(uint16_t* cfgFlagsP)
     if (ProteusIV_Get(ProteusIV_USERSETTING_CFG_FLAGS, help, &length))
     {
         memcpy((uint8_t*)cfgFlagsP, help, 2);
+        *cfgFlagsP = host_from_le16(*cfgFlagsP);
         return true;
     }
 
@@ -1441,8 +1569,7 @@ bool ProteusIV_GetRAM(ProteusIV_RuntimeSettings_t runtimeSetting, uint8_t* respo
     txPacket.Length = 1;
     txPacket.Data[0] = runtimeSetting;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1478,8 +1605,7 @@ bool ProteusIV_SetRAM(ProteusIV_RuntimeSettings_t runtimeSetting, uint8_t* value
     txPacket.Data[0] = runtimeSetting;
     memcpy(&txPacket.Data[1], valueP, length);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1505,8 +1631,7 @@ bool ProteusIV_GetState(ProteusIV_ModuleState_t* moduleStateP)
     txPacket.Cmd = PROTEUSIV_CMD_GETSTATE_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1514,7 +1639,11 @@ bool ProteusIV_GetState(ProteusIV_ModuleState_t* moduleStateP)
     if (CMD_Status_Success == Wait4CNF(CMD_WAIT_TIME, PROTEUSIV_CMD_GETSTATE_CNF, true))
     {
         moduleStateP->internal_mode = rxPacket.Data[1];
-        moduleStateP->connection_state.raw = rxPacket.Data[2];
+        moduleStateP->connection_state.advertising = BIT_VALUE(rxPacket.Data[2], PROTEUSIV_CONN_STATE_ADVERTISING_BIT);
+        moduleStateP->connection_state.scanning = BIT_VALUE(rxPacket.Data[2], PROTEUSIV_CONN_STATE_SCANNING_BIT);
+        moduleStateP->connection_state.connected = BIT_VALUE(rxPacket.Data[2], PROTEUSIV_CONN_STATE_CONNECTED_BIT);
+        moduleStateP->connection_state.peripheral_link_open = BIT_VALUE(rxPacket.Data[2], PROTEUSIV_CONN_STATE_PERIPHERAL_LINK_OPEN_BIT);
+        moduleStateP->connection_state.central_link_open = BIT_VALUE(rxPacket.Data[2], PROTEUSIV_CONN_STATE_CENTRAL_LINK_OPEN_BIT);
         return true;
     }
 
@@ -1541,8 +1670,7 @@ bool ProteusIV_ScanStart(ProteusIV_ScanResult_t* scanresultP)
     txPacket.Length = 1;
     txPacket.Data[0] = 1;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         ProteusIV_ScanDevicesP = NULL;
         return false;
@@ -1568,8 +1696,7 @@ bool ProteusIV_ScanStop()
     txPacket.Length = 1;
     txPacket.Data[0] = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1606,8 +1733,7 @@ bool ProteusIV_AdvertisingStart()
     txPacket.Length = 1;
     txPacket.Data[0] = 1;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1626,8 +1752,7 @@ bool ProteusIV_AdvertisingStop()
     txPacket.Length = 1;
     txPacket.Data[0] = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1649,8 +1774,7 @@ bool ProteusIV_GetConnectionInfo(uint8_t conn_ID, ProteusIV_ConnectedDevices_t* 
     txPacket.Length = 1;
     txPacket.Data[0] = conn_ID;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         ProteusIV_ConnectedDevicesP = NULL;
         return false;
@@ -1673,8 +1797,7 @@ bool ProteusIV_Connect(ProteusIV_Bluetooth_Address_Type_t type, uint8_t* btMacP)
     txPacket.Data[0] = (uint8_t)type;
     memcpy(&txPacket.Data[1], btMacP, PROTEUSIV_BTMAC_LENGTH);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1694,8 +1817,7 @@ bool ProteusIV_Passkey(uint8_t conn_ID, uint8_t* passkey)
     txPacket.Data[0] = conn_ID;
     memcpy(&txPacket.Data[1], passkey, PROTEUSIV_PASSKEY_LENGTH);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1715,8 +1837,7 @@ bool ProteusIV_NumericCompareConfirm(uint8_t conn_ID, bool keyIsOk)
     txPacket.Data[0] = conn_ID;
     txPacket.Data[1] = keyIsOk ? 0x00 : 0x01;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1736,8 +1857,7 @@ bool ProteusIV_PhyUpdate(uint8_t conn_ID, ProteusIV_Phy_t phy)
     txPacket.Data[0] = conn_ID;
     txPacket.Data[1] = (uint8_t)phy;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1760,8 +1880,7 @@ bool ProteusIV_GetBonds(ProteusIV_BondDatabase_t* bondDatabaseP)
     txPacket.Cmd = PROTEUSIV_CMD_GETBONDS_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         ProteusIV_BondDatabaseP = NULL;
         return false;
@@ -1783,8 +1902,7 @@ bool ProteusIV_DeleteBonds()
     txPacket.Cmd = PROTEUSIV_CMD_DELETEBONDS_REQ;
     txPacket.Length = 0;
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }
@@ -1805,8 +1923,7 @@ bool ProteusIV_DeleteBond(ProteusIV_Bluetooth_Address_Type_t type, uint8_t* btMa
     txPacket.Data[0] = (uint8_t)type;
     memcpy(&txPacket.Data[1], btMacP, PROTEUSIV_BTMAC_LENGTH);
 
-    FillChecksum(&txPacket);
-    if (!ProteusIV_Internal_Transmit((uint8_t*)&txPacket, txPacket.Length + LENGTH_CMD_OVERHEAD))
+    if (!ProteusIV_Command_Transmit(&txPacket))
     {
         return false;
     }

@@ -33,10 +33,15 @@
 #ifndef TARVOS_E_EXAMPLES_H_INCLUDED
 #define TARVOS_E_EXAMPLES_H_INCLUDED
 
+#include <TarvosE/TarvosE.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern TarvosE_Pins_t TarvosE_pins;
+extern WE_UART_t TarvosE_uart;
 
 extern void TarvosE_Examples(void);
 

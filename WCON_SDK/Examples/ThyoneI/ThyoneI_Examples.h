@@ -33,10 +33,15 @@
 #ifndef THYONEI_EXAMPLES_H_INCLUDED
 #define THYONEI_EXAMPLES_H_INCLUDED
 
+#include <ThyoneI/ThyoneI.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+extern ThyoneI_Pins_t ThyoneI_pins;
+extern WE_UART_t ThyoneI_uart;
 
 extern void ThyoneI_Examples(void);
 
